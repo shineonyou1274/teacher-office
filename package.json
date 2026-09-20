@@ -1,0 +1,27 @@
+{
+  "name": "teacher-office",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AI 교무실 — 12개 AI 팀이 수업 준비를 돌리는 교사용 데스크톱",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tsx": "^4.23.13",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  }
+}
