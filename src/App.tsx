@@ -1,28 +1,28 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CREDITS, DEPARTMENTS, SCHOOL, STORAGE_LINK } from "../school.config";
 import Canvas from "./engine/Canvas";
-import { Office, PHASES, type ChatEntry, type Snapshot } from "./engine/sim";
-import { configProblems, DEPT_LEAD, ME } from "./engine/staff";
+import { Office, STEP_NAMES, type Msg, type ViewState } from "./engine/sim";
+import { configWarnings, LEADS, ME } from "./engine/staff";
 
-const SOURCE_LABEL: Record<NonNullable<ChatEntry["source"]>, string> = {
+const SOURCE_LABEL: Record<NonNullable<Msg["source"]>, string> = {
   rule: "규칙",
   note: "안내",
 };
 
 const QUICK = [
-  { label: "현황 보고", cmd: "현황 보고" },
-  { label: "왜 늦어져?", cmd: "왜 늦어져?" },
-  { label: "검수팀 뭐해?", cmd: "검수팀 뭐해?" },
-  { label: "집중 모드", cmd: "집중 모드" },
+  { label: "어디까지 됐어?", cmd: "어디까지 됐어?" },
+  { label: "막힌 데 있어?", cmd: "막힌 데 있어?" },
+  { label: "검수팀 상황", cmd: "검수팀 상황" },
+  { label: "자리 지키기", cmd: "자리 지키기" },
 ];
 
 export default function App() {
   const office = useMemo(() => new Office(), []);
-  const [snap, setSnap] = useState<Snapshot>(() => office.snapshot());
+  const [snap, setSnap] = useState<ViewState>(() => office.view());
   const [elapsed, setElapsed] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const problems = useMemo(() => configProblems(), []);
+  const problems = useMemo(() => configWarnings(), []);
 
   // 애니메이션 루프 — 화면 갱신은 초당 20번이면 충분합니다
   useEffect(() => {
@@ -35,28 +35,28 @@ export default function App() {
       office.tick(dt);
       acc += dt;
       setElapsed((e) => e + dt);
-      if (acc > 0.05) { setSnap(office.snapshot()); acc = 0; }
+      if (acc > 0.05) { setSnap(office.view()); acc = 0; }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [office]);
 
-  const logRef = useRef<HTMLDivElement>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = logRef.current;
+    const el = feedRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [snap.chat.length]);
+  }, [snap.messages.length]);
 
   const send = useCallback((text: string) => {
     const value = text.trim();
     if (!value) return;
-    office.command(value);
+    office.ask(value);
     setDraft("");
   }, [office]);
 
   const agent = picked ? office.byId.get(picked) ?? null : null;
-  const progress = Math.round((snap.phaseIndex / (PHASES.length - 1)) * 100);
+  const progress = Math.round((snap.stepIndex / (STEP_NAMES.length - 1)) * 100);
 
   if (problems.length) {
     return (
@@ -82,7 +82,7 @@ export default function App() {
         </div>
         <div className="clock">
           <span>{snap.clock}</span>
-          <small>{snap.phase}</small>
+          <small>{snap.stepName}</small>
         </div>
       </header>
 
@@ -91,16 +91,16 @@ export default function App() {
         <p>{SCHOOL.subtitle}</p>
         <div className="bar"><i style={{ width: `${progress}%` }} /></div>
         <div className="chips">
-          <span className="chip">근무 {snap.stats.onDuty}명</span>
-          <span className="chip mint">완료 {snap.stats.done}팀</span>
-          <span className="chip yellow">진행 {snap.stats.working}팀</span>
+          <span className="chip">근무 {snap.stats.present}명</span>
+          <span className="chip mint">마친 팀 {snap.stats.done}</span>
+          <span className="chip yellow">작업 중 {snap.stats.working}팀</span>
           <span className="chip lav">자료 대기 {snap.stats.blocked}팀</span>
-          {snap.focusMode ? <span className="chip pink">집중 모드</span> : null}
+          {snap.focusOn ? <span className="chip pink">자리 지키는 중</span> : null}
         </div>
       </section>
 
       <section className="panel controls">
-        {!snap.running && !snap.dayDone ? (
+        {!snap.running && !snap.dayOver ? (
           <button className="btn primary" onClick={() => office.start()}>오늘 업무 시작</button>
         ) : (
           <button className="btn" onClick={() => office.togglePause()}>
@@ -113,13 +113,13 @@ export default function App() {
               onClick={() => office.setSpeed(v)}>{v}x</button>
           ))}
         </div>
-        {snap.approvalPending ? (
-          <button className="btn approve" onClick={() => office.approve()}>
-            ★ 오늘 결정할 1건 — 승인하기
+        {snap.signoffPending ? (
+          <button className="btn signOff" onClick={() => office.signOff()}>
+            ★ 오늘 결정할 1건 — 결재하기
           </button>
         ) : (
           <span className="muted">
-            {snap.dayDone ? "오늘 업무가 끝났습니다" : "선생님이 결정할 건 하루에 한 번입니다"}
+            {snap.dayOver ? "오늘 업무가 끝났습니다" : "선생님이 결정할 건 하루에 한 번입니다"}
           </span>
         )}
         {STORAGE_LINK ? <a className="btn tiny" href={STORAGE_LINK} target="_blank" rel="noreferrer">결과물 보관함</a> : null}
@@ -128,7 +128,7 @@ export default function App() {
       <div className="layout">
         <section className="panel stage">
           <div className="stage-scroll">
-            <Canvas agents={office.agents} snap={snap} elapsed={elapsed} onPick={setPicked} />
+            <Canvas people={office.people} snap={snap} elapsed={elapsed} onPick={setPicked} />
           </div>
           <small className="hint">직원을 클릭하면 프로필이 열립니다</small>
         </section>
@@ -136,8 +136,8 @@ export default function App() {
         <aside className="rail">
           <section className="panel console">
             <div className="panel-bar">🎤 선생님 지시창</div>
-            <div className="chat" ref={logRef}>
-              {snap.chat.map((entry) => (
+            <div className="messages" ref={feedRef}>
+              {snap.messages.map((entry) => (
                 <div key={entry.id} className={`line ${entry.from}`}>
                   <b>
                     {entry.from === "me" ? ME.callsign : entry.name}
@@ -155,7 +155,7 @@ export default function App() {
             </div>
             <form className="ask" onSubmit={(e) => { e.preventDefault(); send(draft); }}>
               <input value={draft} onChange={(e) => setDraft(e.target.value)}
-                placeholder="예: 검수팀 뭐해? / 왜 늦어져?" aria-label="선생님 지시 입력" />
+                placeholder="예: 검수팀 상황 / 막힌 데 있어?" aria-label="선생님 지시 입력" />
               <button className="btn primary tiny" type="submit">지시</button>
             </form>
           </section>
@@ -163,7 +163,7 @@ export default function App() {
           <section className="panel feed">
             <div className="panel-bar">📋 오늘 기록</div>
             <ul>
-              {snap.log.map((l) => (
+              {snap.notes.map((l) => (
                 <li key={l.id}><span className="t">{l.time}</span> <span className={`tone ${l.tone}`}>{l.icon}</span> {l.text}</li>
               ))}
             </ul>
@@ -175,7 +175,7 @@ export default function App() {
               {DEPARTMENTS.map((d) => (
                 <li key={d.id}>
                   <span>{d.icon} {d.name}</span>
-                  <em className={`st ${snap.deptStatus[d.id]?.replace(/\s/g, "")}`}>{snap.deptStatus[d.id]}</em>
+                  <em className={`st ${snap.teamState[d.id]?.replace(/\s/g, "")}`}>{snap.teamState[d.id]}</em>
                 </li>
               ))}
             </ul>
@@ -204,7 +204,7 @@ export default function App() {
         </div>
       ) : null}
 
-      {snap.meetingTitle ? <div className="toast">🗣️ {snap.meetingTitle} — 협의회실</div> : null}
+      {snap.meetingName ? <div className="toast">🗣️ {snap.meetingName} — 협의회실</div> : null}
 
       <footer>
         {CREDITS.maker.name ? (
@@ -223,7 +223,7 @@ export default function App() {
           <p className="mine muted">school.config.ts 의 CREDITS 에 이름을 넣으면 여기 표시됩니다</p>
         )}
         <p className="tiny-note">
-          비서실장 {DEPT_LEAD.desk.name} · AI 직원 {DEPARTMENTS.length}개 부서 · 자유롭게 고쳐 쓰세요
+          비서실장 {LEADS.desk.name} · AI 직원 {DEPARTMENTS.length}개 부서 · 자유롭게 고쳐 쓰세요
         </p>
       </footer>
     </main>

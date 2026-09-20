@@ -5,9 +5,9 @@
  * school.config.ts 에서 색을 바꾸면 그 자리에서 반영됩니다.
  */
 import { useEffect, useRef } from "react";
-import type { Agent, Snapshot } from "./sim";
+import type { Person, ViewState } from "./sim";
 import {
-  DEPT_ROOMS, PROPS, ROOMS, TILE, WORLD_H, WORLD_W, type Room,
+  TEAM_SPACES, FURNITURE, SPACES, TILE_PX, MAP_PX_H, MAP_PX_W, type Space,
 } from "./world";
 
 const C = {
@@ -20,57 +20,57 @@ const C = {
 };
 
 const STATUS_DOT: Record<string, string> = {
-  "완료": "#4aa17a", "진행 중": "#e0a63c", "승인 대기": "#d9647a",
+  "마침": "#4aa17a", "작업 중": "#e0a63c", "결재 대기": "#d9647a",
   "자료 대기": "#8f7fd1", "대기": "#b9ae9f",
 };
 
-function roomFill(room: Room) {
-  if (room.kind === "teacher") return C.teacher;
-  if (room.kind === "meeting") return C.meeting;
-  if (room.kind === "lounge") return C.lounge;
+function spaceFill(space: Space) {
+  if (space.kind === "teacher") return C.teacher;
+  if (space.kind === "meeting") return C.meeting;
+  if (space.kind === "lounge") return C.lounge;
   return C.dept;
 }
 
-function drawRoom(g: CanvasRenderingContext2D, room: Room, status: string | undefined, lit: boolean) {
-  const x = room.x * TILE, y = room.y * TILE, w = room.w * TILE, h = room.h * TILE;
+function drawSpace(g: CanvasRenderingContext2D, space: Space, status: string | undefined, lit: boolean) {
+  const x = space.x * TILE_PX, y = space.y * TILE_PX, w = space.w * TILE_PX, h = space.h * TILE_PX;
 
-  g.fillStyle = roomFill(room);
+  g.fillStyle = spaceFill(space);
   g.fillRect(x, y, w, h);
   if (lit) { g.fillStyle = C.spot; g.fillRect(x, y, w, h); }
 
   // 벽 — 위쪽만 밝게 해서 입체감
   g.fillStyle = C.wall;
-  g.fillRect(x, y, w, TILE); g.fillRect(x, y + h - TILE, w, TILE);
-  g.fillRect(x, y, TILE, h); g.fillRect(x + w - TILE, y, TILE, h);
+  g.fillRect(x, y, w, TILE_PX); g.fillRect(x, y + h - TILE_PX, w, TILE_PX);
+  g.fillRect(x, y, TILE_PX, h); g.fillRect(x + w - TILE_PX, y, TILE_PX, h);
   g.fillStyle = C.wallTop;
   g.fillRect(x, y, w, 4);
 
   // 문 — 벽을 뚫어 바닥색으로
   g.fillStyle = C.corridor;
-  for (const d of room.doors) g.fillRect(d.x * TILE, d.y * TILE, TILE, TILE);
+  for (const d of space.doors) g.fillRect(d.x * TILE_PX, d.y * TILE_PX, TILE_PX, TILE_PX);
 
   // 이름표
   g.fillStyle = "#fffdf8";
-  g.fillRect(x + 6, y + 3, Math.min(w - 12, room.name.length * 11 + 26), 15);
+  g.fillRect(x + 6, y + 3, Math.min(w - 12, space.name.length * 11 + 26), 15);
   g.fillStyle = C.ink;
   g.font = "600 11px 'Malgun Gothic', system-ui, sans-serif";
   g.textBaseline = "middle";
-  g.fillText(`${room.icon} ${room.name}`, x + 11, y + 11);
+  g.fillText(`${space.icon} ${space.name}`, x + 11, y + 11);
 
   if (status) {
-    const cx = x + w - TILE - 6, cy = y + TILE + 8;
+    const cx = x + w - TILE_PX - 6, cy = y + TILE_PX + 8;
     g.fillStyle = STATUS_DOT[status] ?? C.faint;
     g.beginPath(); g.arc(cx, cy, 5, 0, Math.PI * 2); g.fill();
   }
 
   g.fillStyle = C.faint;
   g.font = "9px 'Courier New', monospace";
-  g.fillText(room.short, x + 10, y + h - 9);
+  g.fillText(space.short, x + 10, y + h - 9);
 }
 
 function drawProps(g: CanvasRenderingContext2D) {
-  for (const p of PROPS) {
-    const x = p.x * TILE, y = p.y * TILE, w = p.w * TILE, h = p.h * TILE;
+  for (const p of FURNITURE) {
+    const x = p.x * TILE_PX, y = p.y * TILE_PX, w = p.w * TILE_PX, h = p.h * TILE_PX;
     switch (p.kind) {
       case "desk":
       case "teacher-desk":
@@ -78,8 +78,8 @@ function drawProps(g: CanvasRenderingContext2D) {
         g.fillStyle = C.deskTop; g.fillRect(x, y, w, 4);
         break;
       case "monitor":
-        g.fillStyle = "#3c4a5a"; g.fillRect(x + 4, y - 5, TILE - 8, 8);
-        g.fillStyle = "#7fb2a5"; g.fillRect(x + 6, y - 3, TILE - 12, 4);
+        g.fillStyle = "#3c4a5a"; g.fillRect(x + 4, y - 5, TILE_PX - 8, 8);
+        g.fillStyle = "#7fb2a5"; g.fillRect(x + 6, y - 3, TILE_PX - 12, 4);
         break;
       case "table":
         g.fillStyle = "#d9c3a5"; g.fillRect(x, y, w, h);
@@ -110,9 +110,9 @@ function drawProps(g: CanvasRenderingContext2D) {
         if (p.label) { g.font = "11px system-ui"; g.fillText(p.label, x + 3, y + h / 2); }
         break;
       case "plant":
-        g.fillStyle = "#a9713f"; g.fillRect(x + 4, y + TILE - 7, TILE - 8, 7);
+        g.fillStyle = "#a9713f"; g.fillRect(x + 4, y + TILE_PX - 7, TILE_PX - 8, 7);
         g.fillStyle = C.plant;
-        g.beginPath(); g.arc(x + TILE / 2, y + 6, 6, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.arc(x + TILE_PX / 2, y + 6, 6, 0, Math.PI * 2); g.fill();
         break;
       case "rug":
         g.fillStyle = "rgba(127, 178, 165, .28)"; g.fillRect(x, y, w, h);
@@ -122,13 +122,13 @@ function drawProps(g: CanvasRenderingContext2D) {
 }
 
 /** 직원 한 명 — 머리 + 몸통 + 포인트색 */
-function drawAgent(g: CanvasRenderingContext2D, a: Agent, elapsed: number) {
+function drawPerson(g: CanvasRenderingContext2D, a: Person, elapsed: number) {
   if (a.status === "출근 전") return;
-  const px = a.fx * TILE + TILE / 2;
-  const py = a.fy * TILE + TILE / 2;
+  const px = a.fx * TILE_PX + TILE_PX / 2;
+  const py = a.fy * TILE_PX + TILE_PX / 2;
 
   // 걸을 때 살짝 위아래로 (발소리 대신)
-  const bob = a.anim === "walk" ? Math.sin(elapsed * 11 + a.fx * 2) * 1.2 : 0;
+  const bob = a.pose === "walk" ? Math.sin(elapsed * 11 + a.fx * 2) * 1.2 : 0;
   const top = py - 11 + bob;
 
   g.fillStyle = "rgba(0,0,0,.14)";
@@ -145,14 +145,14 @@ function drawAgent(g: CanvasRenderingContext2D, a: Agent, elapsed: number) {
   g.fillRect(px - 4.5, top, 9, 8);
   g.fillStyle = a.seed.hair;
   g.fillRect(px - 5, top - 1.5, 10, 4.5);
-  if (a.facing === "down") {
+  if (a.heading === "down") {
     g.fillStyle = C.ink;
     g.fillRect(px - 2.5, top + 4, 1.4, 1.6);
     g.fillRect(px + 1.2, top + 4, 1.4, 1.6);
   }
 
   // 타이핑 중이면 깜빡이는 점
-  if (a.anim === "type" && Math.floor(elapsed * 3) % 2 === 0) {
+  if (a.pose === "type" && Math.floor(elapsed * 3) % 2 === 0) {
     g.fillStyle = "#e0a63c";
     g.fillRect(px + 6, top + 2, 2, 2);
   }
@@ -169,10 +169,10 @@ function drawAgent(g: CanvasRenderingContext2D, a: Agent, elapsed: number) {
   g.textAlign = "left";
 }
 
-function drawBubble(g: CanvasRenderingContext2D, a: Agent) {
+function drawBubble(g: CanvasRenderingContext2D, a: Person) {
   if (!a.bubble || a.status === "출근 전") return;
-  const px = a.fx * TILE + TILE / 2;
-  const py = a.fy * TILE + TILE / 2;
+  const px = a.fx * TILE_PX + TILE_PX / 2;
+  const py = a.fy * TILE_PX + TILE_PX / 2;
   g.font = "11px 'Malgun Gothic', system-ui, sans-serif";
   const w = Math.min(230, g.measureText(a.bubble).width + 18);
   const x = px - w / 2, y = py - 42;
@@ -193,9 +193,9 @@ function drawBubble(g: CanvasRenderingContext2D, a: Agent) {
   g.textAlign = "left";
 }
 
-type Props = { agents: Agent[]; snap: Snapshot; elapsed: number; onPick: (id: string) => void };
+type Props = { people: Person[]; snap: ViewState; elapsed: number; onPick: (id: string) => void };
 
-export default function Canvas({ agents, snap, elapsed, onPick }: Props) {
+export default function Canvas({ people, snap, elapsed, onPick }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -205,9 +205,9 @@ export default function Canvas({ agents, snap, elapsed, onPick }: Props) {
     if (!g) return;
 
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    if (canvas.width !== WORLD_W * dpr) {
-      canvas.width = WORLD_W * dpr;
-      canvas.height = WORLD_H * dpr;
+    if (canvas.width !== MAP_PX_W * dpr) {
+      canvas.width = MAP_PX_W * dpr;
+      canvas.height = MAP_PX_H * dpr;
     }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.imageSmoothingEnabled = false;
@@ -215,40 +215,40 @@ export default function Canvas({ agents, snap, elapsed, onPick }: Props) {
 
     // 바닥 — 복도는 조금 진하게
     g.fillStyle = C.corridor;
-    g.fillRect(0, 0, WORLD_W, WORLD_H);
-    for (let y = 0; y < WORLD_H; y += TILE * 2) {
-      for (let x = 0; x < WORLD_W; x += TILE * 2) {
-        g.fillStyle = ((x + y) / TILE) % 4 === 0 ? C.floor : C.floorAlt;
-        g.fillRect(x, y, TILE, TILE);
+    g.fillRect(0, 0, MAP_PX_W, MAP_PX_H);
+    for (let y = 0; y < MAP_PX_H; y += TILE_PX * 2) {
+      for (let x = 0; x < MAP_PX_W; x += TILE_PX * 2) {
+        g.fillStyle = ((x + y) / TILE_PX) % 4 === 0 ? C.floor : C.floorAlt;
+        g.fillRect(x, y, TILE_PX, TILE_PX);
       }
     }
 
-    for (const room of ROOMS) {
-      const isDept = DEPT_ROOMS.some((r) => r.id === room.id);
-      drawRoom(g, room, isDept ? snap.deptStatus[room.id] : undefined, snap.spotlight === room.id);
+    for (const space of SPACES) {
+      const isDept = TEAM_SPACES.some((r) => r.id === space.id);
+      drawSpace(g, space, isDept ? snap.teamState[space.id] : undefined, snap.litSpace === space.id);
     }
     drawProps(g);
 
     // 아래쪽 직원이 앞에 오도록
-    const sorted = [...agents].sort((a, b) => a.fy - b.fy);
-    for (const a of sorted) drawAgent(g, a, elapsed);
+    const sorted = [...people].sort((a, b) => a.fy - b.fy);
+    for (const a of sorted) drawPerson(g, a, elapsed);
     for (const a of sorted) drawBubble(g, a);
-  }, [agents, snap, elapsed]);
+  }, [people, snap, elapsed]);
 
   return (
     <canvas
       ref={ref}
       className="office-canvas"
-      style={{ aspectRatio: `${WORLD_W} / ${WORLD_H}` }}
+      style={{ aspectRatio: `${MAP_PX_W} / ${MAP_PX_H}` }}
       onClick={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
-        const scale = WORLD_W / rect.width;
+        const scale = MAP_PX_W / rect.width;
         const mx = (e.clientX - rect.left) * scale;
         const my = (e.clientY - rect.top) * scale;
         let best: { id: string; d: number } | null = null;
-        for (const a of agents) {
+        for (const a of people) {
           if (a.status === "출근 전") continue;
-          const d = Math.hypot(a.fx * TILE + TILE / 2 - mx, a.fy * TILE + TILE / 2 - my);
+          const d = Math.hypot(a.fx * TILE_PX + TILE_PX / 2 - mx, a.fy * TILE_PX + TILE_PX / 2 - my);
           if (d < 16 && (!best || d < best.d)) best = { id: a.id, d };
         }
         if (best) onPick(best.id);

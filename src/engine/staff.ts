@@ -4,7 +4,7 @@
  */
 import { DEPARTMENTS, PENDING, STAFF, TEACHER, type StaffEntry } from "../../school.config";
 
-export type Seed = {
+export type Profile = {
   id: string;
   name: string;
   callsign?: string;
@@ -21,7 +21,7 @@ export type Seed = {
 const SKIN = ["#f6d5bb", "#e8be9c", "#fadfc9", "#d8a882"];
 
 let seq = 0;
-function make(entry: StaffEntry): Seed {
+function make(entry: StaffEntry): Profile {
   const i = seq++;
   return {
     id: `${entry.dept}-${entry.rank === "lead" ? "lead" : `m${i}`}`,
@@ -38,7 +38,7 @@ function make(entry: StaffEntry): Seed {
   };
 }
 
-export const ME: Seed = {
+export const ME: Profile = {
   id: "teacher",
   name: TEACHER.name,
   callsign: TEACHER.callsign,
@@ -52,35 +52,35 @@ export const ME: Seed = {
   thoughts: [...TEACHER.thoughts],
 };
 
-export const ALL_STAFF: Seed[] = STAFF.map(make);
+export const ROSTER: Profile[] = STAFF.map(make);
 
-export const DEPT_LEAD: Record<string, Seed> = Object.fromEntries(
-  ALL_STAFF.filter((s) => s.rank === "lead").map((s) => [s.deptId, s]),
+export const LEADS: Record<string, Profile> = Object.fromEntries(
+  ROSTER.filter((s) => s.rank === "lead").map((s) => [s.deptId, s]),
 );
 
-export const DEPT_BRIEF: Record<string, { task: string; report: string; name: string }> =
+export const TEAM_INFO: Record<string, { task: string; report: string; name: string }> =
   Object.fromEntries(DEPARTMENTS.map((d) => [d.id, { task: d.task, report: d.report, name: d.name }]));
 
 /** 아직 자료가 없어 멈춰 있는 부서 */
-export const BLOCKED: Record<string, string> = PENDING;
+export const PENDING_INPUT: Record<string, string> = PENDING;
 
 /** 설정이 엉켰을 때 조용히 깨지지 않게 먼저 알려준다 */
-export function configProblems(): string[] {
+export function configWarnings(): string[] {
   const out: string[] = [];
   if (DEPARTMENTS.length !== 12) {
     out.push(`부서가 ${DEPARTMENTS.length}개입니다. 교무실 배치가 12칸 고정이라 12개를 유지해야 합니다.`);
   }
   for (const dept of DEPARTMENTS) {
-    const leads = ALL_STAFF.filter((s) => s.deptId === dept.id && s.rank === "lead");
+    const leads = ROSTER.filter((s) => s.deptId === dept.id && s.rank === "lead");
     if (leads.length === 0) out.push(`${dept.name}: 팀장(rank "lead")이 없습니다.`);
     if (leads.length > 1) out.push(`${dept.name}: 팀장이 ${leads.length}명입니다. 1명만 두세요.`);
   }
-  for (const s of ALL_STAFF) {
+  for (const s of ROSTER) {
     if (!DEPARTMENTS.some((d) => d.id === s.deptId)) {
       out.push(`${s.name}: 모르는 부서 id "${s.deptId}" 입니다.`);
     }
   }
-  for (const id of Object.keys(BLOCKED)) {
+  for (const id of Object.keys(PENDING_INPUT)) {
     if (!DEPARTMENTS.some((d) => d.id === id)) out.push(`PENDING: 모르는 부서 id "${id}" 입니다.`);
   }
   return out;
