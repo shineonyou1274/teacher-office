@@ -115,7 +115,7 @@ export const STAFF: StaffEntry[] = [
     thoughts: ["성취기준 코드까지 맞춰야 진짜 대조예요.", "학년 범위 넘는 개념이 섞였는지 봅니다."] },
   { dept: "review", rank: "member", name: "신유하", role: "표현·난이도 검수",
     colors: ["#3c3a4f", "#f0e2c8", "#7fb2a5"],
-    thoughts: ["금칙어: '여정', '함께 알아볼까요?', '놀라운'", "AI 말투가 남아 있으면 반려합니다."] },
+    thoughts: ["금칙어 목록은 TEACHER_OFFICE.md 를 따릅니다.", "뭘 검수할 문서인지부터 물어봐요. 잣대가 다릅니다."] },
 
   { dept: "write", rank: "lead", name: "임서온", role: "활동지 집필 팀장", callsign: "임집필",
     colors: ["#3b2f4a", "#ffe6ef", "#ffd98e"],
