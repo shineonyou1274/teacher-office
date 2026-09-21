@@ -5,3 +5,4 @@ dist
 *.bak
 MY_ANSWERS.md
 public/state.json
+serial.json
