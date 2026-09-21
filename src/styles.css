@@ -140,3 +140,27 @@ footer .tiny-note { margin: 6px 0 0; font-size: 11px; }
   .layout { grid-template-columns: 1fr; }
   .rail { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 }
+
+/* 실제 작업 기록 띠 — public/state.json 이 있을 때만 뜬다 */
+.livebar {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--green);
+  border-left: 4px solid var(--green);
+  border-radius: 0 8px 8px 0;
+  background: var(--green-soft);
+  display: grid;
+  gap: 3px;
+}
+.livebar b { font-size: 12px; letter-spacing: .02em; }
+.livebar span { font-size: 13px; }
+.livebar small { font-size: 11px; opacity: .75; }
+.roster b.real {
+  margin-left: 6px;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--green-soft);
+  color: var(--green);
+  vertical-align: middle;
+}

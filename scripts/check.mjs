@@ -18,12 +18,16 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join, basename } from "node:path";
 import { argv, exit } from "node:process";
+import { record } from "./state.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const RULEBOOK = join(ROOT, "TEACHER_OFFICE.md");
 
 const args = argv.slice(2);
 const jsonOut = args.includes("--json");
+const noRecord = args.includes("--기록-안함") || args.includes("--no-record");
+const teamFlag = args.findIndex((a) => a === "--팀" || a === "--team");
+const teamId = teamFlag >= 0 ? args[teamFlag + 1] : "review";
 const target = args.find((a) => !a.startsWith("--") && a !== "A" && a !== "B" && a !== "C");
 const kindFlag = args.findIndex((a) => a === "--기준" || a === "--kind");
 const kind = (kindFlag >= 0 ? args[kindFlag + 1] : args.find((a) => ["A", "B", "C"].includes(a))) || "";
@@ -140,6 +144,14 @@ if (kind === "C") {
 
 // ── 결과 ───────────────────────────────────────────────
 const verdict = found.length ? "반려" : "기계 검사 통과";
+
+// 화면이 읽을 기록으로 남긴다. 이게 있어야 '자료 대기'가 진짜 뜻을 갖는다
+if (!noRecord) {
+  const note = found.length
+    ? `${basename(target)} 반려 ${found.length}건 — ${found[0].rule} ${found[0].what}`
+    : `${basename(target)} 기계 검사 통과${check.length ? ` · 읽어볼 것 ${check.length}건` : ""}`;
+  await record(teamId, found.length ? "결재 대기" : "마침", note);
+}
 if (jsonOut) {
   console.log(JSON.stringify({ file: basename(target), kind: kind || "공통만", verdict, found, check }, null, 2));
   exit(found.length ? 1 : 0);

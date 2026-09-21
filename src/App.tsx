@@ -3,6 +3,7 @@ import { CREDITS, DEPARTMENTS, SCHOOL, STORAGE_LINK } from "../school.config";
 import Canvas from "./engine/Canvas";
 import { Office, STEP_NAMES, type Msg, type ViewState } from "./engine/sim";
 import { configWarnings, LEADS, ME } from "./engine/staff";
+import { ago, loadLive, type Live } from "./engine/live";
 
 const SOURCE_LABEL: Record<NonNullable<Msg["source"]>, string> = {
   rule: "규칙",
@@ -23,6 +24,17 @@ export default function App() {
   const [picked, setPicked] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const problems = useMemo(() => configWarnings(), []);
+  const [live, setLive] = useState<Live | null>(null);
+
+  // 실제 작업 기록(public/state.json)을 읽는다. 없으면 각본만 돈다.
+  // npm run check 나 /검수 가 돌면 이 파일이 바뀌므로 5초마다 다시 본다
+  useEffect(() => {
+    let alive = true;
+    const read = () => { loadLive().then((next) => { if (alive) setLive(next); }); };
+    read();
+    const timer = setInterval(read, 5000);
+    return () => { alive = false; clearInterval(timer); };
+  }, []);
 
   // 애니메이션 루프 — 화면 갱신은 초당 20번이면 충분합니다
   useEffect(() => {
@@ -97,6 +109,18 @@ export default function App() {
           <span className="chip lav">자료 대기 {snap.stats.blocked}팀</span>
           {snap.focusOn ? <span className="chip pink">자리 지키는 중</span> : null}
         </div>
+
+        {live ? (
+          <div className="livebar">
+            <b>실제 작업 기록을 읽는 중</b>
+            <span>
+              {live.log[0]
+                ? `${live.log[0].note} · ${ago(live.log[0].at)}`
+                : "아직 기록이 없습니다"}
+            </span>
+            <small>‘기록’이 붙은 팀은 각본이 아니라 실제 검사 결과입니다</small>
+          </div>
+        ) : null}
       </section>
 
       <section className="panel controls">
@@ -172,12 +196,17 @@ export default function App() {
           <section className="panel roster">
             <div className="panel-bar">🧑‍🏫 부서 현황</div>
             <ul>
-              {DEPARTMENTS.map((d) => (
-                <li key={d.id}>
-                  <span>{d.icon} {d.name}</span>
-                  <em className={`st ${snap.teamState[d.id]?.replace(/\s/g, "")}`}>{snap.teamState[d.id]}</em>
-                </li>
-              ))}
+              {DEPARTMENTS.map((d) => {
+                // 실제 기록이 있으면 각본보다 그걸 믿는다
+                const real = live?.teams[d.id];
+                const state = real?.state ?? snap.teamState[d.id];
+                return (
+                  <li key={d.id} title={real ? `${real.note} (${ago(real.at)})` : undefined}>
+                    <span>{d.icon} {d.name}{real ? <b className="real">기록</b> : null}</span>
+                    <em className={`st ${state?.replace(/\s/g, "")}`}>{state}</em>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         </aside>
