@@ -13,9 +13,6 @@
  */
 import { argv, exit } from "node:process";
 import { record } from "./state.mjs";
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 
 const STATES = ["마침", "작업 중", "결재 대기", "자료 대기", "대기"];
 const [teamId, state, ...rest] = argv.slice(2);
@@ -36,14 +33,10 @@ if (!STATES.includes(state)) {
   exit(2);
 }
 
-// 없는 팀에 적으면 화면에 안 뜨고 조용히 묻힙니다. 미리 알려줍니다
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const config = await readFile(join(ROOT, "school.config.ts"), "utf8");
-const known = [...config.matchAll(/\{ id: "(\w+)"/g)].map((m) => m[1]);
-if (known.length && !known.includes(teamId)) {
-  console.error(`"${teamId}" 는 설정에 없는 팀입니다.\n지금 있는 팀: ${known.join(", ")}`);
+// 없는 팀에 적으면 화면에 영영 안 뜹니다. state.mjs 가 막아줍니다
+const result = await record(teamId, state, note || state);
+if (result.skipped) {
+  console.error(`"${teamId}" 는 설정에 없는 팀입니다.\n지금 있는 팀: ${result.known.join(", ")}`);
   exit(2);
 }
-
-await record(teamId, state, note || state);
 console.log(`적었습니다 — ${teamId} · ${state}${note ? ` · ${note}` : ""}`);

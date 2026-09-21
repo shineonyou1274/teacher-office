@@ -48,17 +48,28 @@ function nextNo(data) {
   return all.reduce((max, ep) => Math.max(max, ep.no ?? 0), 0) + 1;
 }
 
-/** 화면에 알리고, 대기열이 비어가면 같이 적는다 */
+/**
+ * 화면에 알리고, 대기열이 비어가면 같이 적는다.
+ * 설정에 연재팀이 없으면 적지 않고 한 줄 알려줍니다 — 안 뜰 기록을
+ * 남기면 '했는데 화면엔 없는' 상태가 되기 때문입니다.
+ */
 async function report(data, teamId = "serial") {
   const left = data.queue.length;
   const today = data.today ? `${data.today.no}화 준비됨` : "오늘 꺼낸 화 없음";
   const note = `${today} · 대기열 ${left}개`;
+
+  let result;
   if (!data.today && left === 0) {
-    await record(teamId, "자료 대기", "올릴 화가 없습니다. 대기열을 채워주세요");
+    result = await record(teamId, "자료 대기", "올릴 화가 없습니다. 대기열을 채워주세요");
   } else if (left < LOW) {
-    await record(teamId, "작업 중", `${note} — 곧 빕니다`);
+    result = await record(teamId, "작업 중", `${note} — 곧 빕니다`);
   } else {
-    await record(teamId, data.today ? "마침" : "대기", note);
+    result = await record(teamId, data.today ? "마침" : "대기", note);
+  }
+
+  if (result?.skipped) {
+    console.log(`(설정에 "${teamId}" 팀이 없어 화면에는 안 뜹니다. 대기열은 serial.json 에 그대로 있습니다.)`);
+    console.log(`  지금 있는 팀: ${result.known.join(", ")}`);
   }
   return note;
 }

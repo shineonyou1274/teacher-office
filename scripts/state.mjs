@@ -24,6 +24,16 @@ export async function readState() {
   }
 }
 
+/** school.config.ts 에 실제로 있는 팀 id 들 */
+export async function knownTeams() {
+  try {
+    const config = await readFile(join(ROOT, "school.config.ts"), "utf8");
+    return [...config.matchAll(/\{ id: "(\w+)"/g)].map((m) => m[1]);
+  } catch {
+    return [];
+  }
+}
+
 /**
  * 한 팀의 결과를 적는다.
  * @param {string} teamId   school.config.ts 의 부서 id (예: "review")
@@ -31,6 +41,13 @@ export async function readState() {
  * @param {string} note     한 줄 요약. 화면과 기록에 그대로 뜬다
  */
 export async function record(teamId, state, note) {
+  // 설정에 없는 팀에 적으면 화면에는 영영 안 뜹니다. 조용히 쌓이는 대신
+  // 적지 않고 알려줍니다 — 안 한 일을 한 것처럼 남기지 않으려는 것입니다
+  const known = await knownTeams();
+  if (known.length && !known.includes(teamId)) {
+    return { skipped: true, teamId, known };
+  }
+
   const now = new Date().toISOString();
   const data = await readState();
   data.teams[teamId] = { state, note, at: now };
@@ -39,5 +56,5 @@ export async function record(teamId, state, note) {
   data.updatedAt = now;
   await mkdir(dirname(STATE_FILE), { recursive: true });
   await writeFile(STATE_FILE, JSON.stringify(data, null, 2), "utf8");
-  return data;
+  return { skipped: false, data };
 }
