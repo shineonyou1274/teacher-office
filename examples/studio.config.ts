@@ -13,7 +13,8 @@
 //   - 웹을 뒤지기 전에 **내 구글 드라이브부터** 봅니다 (gws)
 //   - **1차 추리기는 사람이** 합니다. AI가 먼저 거르지 않습니다
 //   - 결재는 하루 한 번, **흐름안 고르기** 자리입니다
-//   - 영상은 기획안 → **스토리(같이 짬)** → 자동 생성 → **매일 한 화씩 연재**
+//   - 영상은 **이미 쓰던 스킬 흐름 그대로** 옮겼습니다
+//       기획안 → master-sheet → storyboard-v1/v2 → seedance → 매일 한 화씩
 //   - 코딩과 아직 연동 안 된 자동 생성은 PENDING 에 둬서 '자료 대기'로 뜹니다
 // ══════════════════════════════════════════════════════════
 
@@ -58,8 +59,8 @@ export const DEPARTMENTS = [
   { id: "plan",     name: "세부 기획팀",    short: "plan",     icon: "🧭", task: "연수 흐름·시간 배분 같이 조정",         report: "흐름안 3개, 꼭지별 분 단위까지 붙였어요." },
   { id: "slide",    name: "연수 자료팀",    short: "slide",    icon: "📊", task: "슬라이드 + 그 자리에서 해볼 것",        report: "꼭지마다 따라 할 것 하나씩 넣었어요." },
   { id: "code",     name: "바이브코딩팀",   short: "code",     icon: "💻", task: "그날 만들 도구·앱",                     report: "돌아가는 것만 넘깁니다." },
-  { id: "story",    name: "영상 스토리팀",  short: "story",    icon: "🎬", task: "기획안 → 스토리 같이 짜고 화별로 쪼개기", report: "1화가 3초 안에 안 잡히면 다시 짭니다." },
-  { id: "auto",     name: "자동 생성팀",    short: "auto",     icon: "⚙️", task: "스토리를 생성 도구에 넘길 형태로",      report: "연결 안 된 건 '미연동'이라고 적어요." },
+  { id: "story",    name: "영상 스토리팀",  short: "story",    icon: "🎬", task: "기획안 → 마스터 시트 → 콘티 (같이 짠다)",  report: "이미 쓰던 스킬 그대로 — master-sheet, storyboard." },
+  { id: "auto",     name: "자동 생성팀",    short: "auto",     icon: "⚙️", task: "콘티 → Seedance 프롬프트 → 생성",       report: "연결 안 된 건 '미연동'이라고 적어요." },
   { id: "serial",   name: "연재 관리팀",    short: "serial",   icon: "📅", task: "오늘 올릴 1개 + 다음 화 대기열",        report: "올리는 건 선생님이 합니다. 저는 준비까지." },
   { id: "review",   name: "검수팀",         short: "review",   icon: "🛡️", task: "만든 것을 기준 A·B·C로 검사",          report: "반려 사유와 고칠 자리를 같이 적어요." },
   { id: "reflect",  name: "반응 기록팀",    short: "reflect",  icon: "📈", task: "연수·연재 반응 → 다음에 쓸 패턴",       report: "잘된 이유를 조건까지 적어 남겨요." },
@@ -120,14 +121,14 @@ export const STAFF: StaffEntry[] = [
 
   { dept: "story", rank: "lead", name: "양보미", role: "영상 스토리 팀장", callsign: "양스토리",
     colors: ["#3c3a4f", "#ffe6ef", "#7fb2a5"],
-    thoughts: ["기획안만 있으면 스토리는 같이 짜요. 혼자 안 정합니다.", "1화 첫 3초에 못 잡으면 2화는 안 봐요.", "한 화에 하나만 남기고 나머지는 다음 화로."] },
+    thoughts: ["기획안만 있으면 스토리는 같이 짜요. 혼자 안 정합니다.", "인물이 흔들리면 마스터 시트부터 다시 뽑아요.", "한 화에 하나만 남기고 나머지는 다음 화로."] },
   { dept: "story", rank: "member", name: "박이현", role: "화별 쪼개기",
     colors: ["#372b4a", "#d8ead2", "#e2857f"],
     thoughts: ["연재는 끊는 자리가 절반이에요.", "다음 화가 궁금해야 이어서 봅니다."] },
 
   { dept: "auto", rank: "lead", name: "우가온", role: "자동 생성 팀장", callsign: "우자동",
     colors: ["#3b2f4a", "#f0e2c8", "#e2857f"],
-    thoughts: ["연결 안 된 건 '미연동'이라고 적습니다. 됐다고 안 해요.", "스토리가 흔들리면 생성도 흔들려요.", "실패하면 실패했다고 적고 다시 겁니다."] },
+    thoughts: ["연결 안 된 건 '미연동'이라고 적습니다. 됐다고 안 해요.", "콘티가 흔들리면 생성도 흔들려요. 앞으로 돌려보냅니다.", "실패하면 실패했다고 적고 다시 겁니다."] },
 
   { dept: "serial", rank: "lead", name: "민세온", role: "연재 관리 팀장", callsign: "민연재",
     colors: ["#3b2f4a", "#d8ead2", "#ffd98e"],
