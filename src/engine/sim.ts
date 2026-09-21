@@ -6,7 +6,7 @@
  * 설계 메모 — 각본은 코드가 아니라 데이터(DAY_PLAN)입니다.
  * 단계를 바꾸고 싶으면 아래 DAY_PLAN 배열만 고치면 되고, 엔진은 안 건드려도 됩니다.
  */
-import { DEPARTMENTS } from "../../school.config";
+import { DAY_PLAN, DEPARTMENTS, type DayStep } from "../../school.config";
 import { findRoute } from "./pathfind";
 import { ROSTER, PENDING_INPUT, TEAM_INFO, LEADS, ME, type Profile } from "./staff";
 import {
@@ -58,26 +58,6 @@ export type ViewState = {
 const WALK_SPEED = 4.2;          // 타일/초
 const SIM_MIN_PER_SEC = 3.8;     // 시뮬 1초 = 3.8분 → 08:00 출근이 16시대에 끝난다
 const DAY_START_MIN = 8 * 60;    // 08:00 출근
-
-/** 하루 각본 — 여기만 고치면 단계가 바뀝니다 */
-const DAY_PLAN: { title: string; team?: string; secs?: number }[] = [
-  { title: "출근 전" },
-  { title: "08:00 전원 출근" },
-  { title: "자료 조사", team: "research", secs: 6 },
-  { title: "학습자 분석", team: "learner", secs: 5 },
-  { title: "수업 아이디어 10개", team: "design", secs: 7 },
-  { title: "교육과정 검수", team: "review", secs: 6 },
-  { title: "수업안 3개로 좁히기" },
-  { title: "선생님 결재 대기" },
-  { title: "활동지 집필", team: "write", secs: 7 },
-  { title: "수업자료·학습지 제작", team: "slide", secs: 6 },
-  { title: "평가 문항 정리", team: "assess", secs: 5 },
-  { title: "관찰 기록 정리", team: "care", secs: 4 },
-  { title: "가정통신·협의 답장", team: "comm", secs: 4 },
-  { title: "성찰 기록", team: "reflect", secs: 5 },
-  { title: "교무 브리핑", team: "desk", secs: 4 },
-  { title: "업무 종료" },
-];
 
 export const STEP_NAMES = DAY_PLAN.map((s) => s.title);
 export const STEP_COUNT = STEP_NAMES.length;
@@ -252,9 +232,52 @@ export class Office {
     this.advance();
   }
 
+  /**
+   * 하루를 돈다.
+   *
+   * 순서는 school.config.ts 의 DAY_PLAN 이 정합니다. 여기서는 단계 번호를
+   * 세지 않습니다 — 선생님이 줄을 넣거나 빼도 결재 자리가 어긋나지 않도록,
+   * 각 줄의 kind 를 보고 무엇을 할지 고릅니다.
+   */
   private *runDay(): Generator<number | (() => boolean), void, void> {
-    // ① 출근
-    this.stepIndex = 1;
+    const desk = this.byId.get(LEADS.desk?.id ?? "");
+
+    for (let i = 1; i < DAY_PLAN.length; i += 1) {
+      const step = DAY_PLAN[i];
+      this.stepIndex = i;
+
+      if (step.kind === "종료") break;
+
+      if (step.kind === "출근") { yield* this.arriveAtWork(); continue; }
+      if (step.kind === "결재") { yield* this.waitForSignoff(step); continue; }
+      if (step.kind === "브리핑") { yield* this.briefing(step); continue; }
+
+      if (step.team) {
+        if (PENDING_INPUT[step.team]) { yield* this.noInputYet(step.team); continue; }
+        yield* this.runTeam(step.team, step.secs ?? 5);
+        continue;
+      }
+
+      // 팀이 안 붙은 줄 — 화면 이름만 바뀌고 잠깐 쉬어간다
+      if (step.note) this.addNote("💡", step.note, "pink");
+      yield step.secs ?? 1.5;
+    }
+
+    // 하루를 닫는다. 시계는 여기서 멈추고, 남은 이동은 뒤에 조용히 이어진다
+    this.stepIndex = DAY_PLAN.length - 1;
+    this.dayOver = true;
+    this.running = false;
+    this.addNote("🌙", "오늘 업무 종료. 내일 08:00에 다시 출근합니다.", "lav");
+
+    if (desk) {
+      desk.seat = this.chairFor(desk);
+      desk.status = "대기";
+      this.goTo(desk, desk.seat);
+    }
+  }
+
+  /** 전원이 복도를 지나 자리로 */
+  private *arriveAtWork(): Generator<number | (() => boolean), void, void> {
     this.addNote("🚪", "08:00 전원 출근 — 복도를 지나 각자 교실로 갑니다.", "yellow");
     // 한꺼번에 몰리면 서로 길을 막는다. 6명씩 나눠 내보낸다.
     // (실시간 setTimeout 이 아니라 시뮬 시간 기준이라 배속을 올려도 어긋나지 않는다)
@@ -267,43 +290,35 @@ export class Office {
       }
       yield 0.35;
     }
-    yield () => this.allSettled(this.people.filter((a) => a.id !== "teacher").map((a) => a.id));
-    for (const agent of this.people) {
-      if (agent.id === "teacher") continue;
+    yield () => this.allSettled(commuters.map((a) => a.id));
+    for (const agent of commuters) {
       agent.status = "대기";
       agent.pose = "type";
     }
-    const secretary = this.byId.get(LEADS.desk?.id ?? "");
-    this.say(secretary, `${ME.callsign}, 오늘 업무 시작합니다.`, 3);
+    this.say(this.byId.get(LEADS.desk?.id ?? ""), `${ME.callsign}, 오늘 업무 시작합니다.`, 3);
     yield 1.5;
+  }
 
-    // ② ~ ⑥ 순차 업무
-    for (let i = 2; i <= 5; i += 1) {
-      const step = DAY_PLAN[i];
-      this.stepIndex = i;
-      if (!step.team) continue;
-      if (PENDING_INPUT[step.team]) { yield* this.noInputYet(step.team); continue; }
-      yield* this.runTeam(step.team, step.secs ?? 5);
-    }
-
-    // ⑥ 후보 좁히기
-    this.stepIndex = 6;
-    this.addNote("💡", "수업 설계팀: 10개 중 3개로 좁혔습니다 — 검수 통과분만", "pink");
-    yield 1.5;
-
-    // ⑦ 선생님 결재 — 여기서 실제로 멈춘다
-    this.stepIndex = 7;
+  /** 여기서 실제로 멈춘다. 선생님이 버튼을 누를 때까지 */
+  private *waitForSignoff(step: DayStep): Generator<number | (() => boolean), void, void> {
     this.signoffPending = true;
-    this.teamState.design = "결재 대기";
-    const attendees = ["design", "review", "desk"]
-      .map((d) => this.byId.get(LEADS[d].id))
-      .filter((a): a is Person => Boolean(a));
+    const waiting = step.team;
+    if (waiting) this.teamState[waiting] = "결재 대기";
+
+    const ids = step.attendees?.length ? step.attendees : [waiting, "desk"].filter(Boolean) as string[];
+    const attendees = ids
+      .map((d) => LEADS[d])
+      .filter(Boolean)
+      .map((lead) => this.byId.get(lead.id))
+      .filter((a): a is Person => Boolean(a))
+      .slice(0, MEETING_CHAIRS.length);   // 좌석보다 많이 부르지 않는다
+
     attendees.forEach((agent, i) => {
       agent.status = "회의 중";
       agent.seat = null;
       this.goTo(agent, MEETING_CHAIRS[i]);
     });
-    this.meetingName = "수업안 결재 협의";
+    this.meetingName = `${step.title} 협의`;
     yield () => this.allSettled(attendees.map((a) => a.id));
     this.say(attendees[attendees.length - 1], `${ME.callsign}, 오늘 결정하실 건 이거 하나예요.`, 4);
     this.addNote("✋", `협의회실에서 ${attendees.length}명이 결재를 기다립니다.`, "pink");
@@ -312,52 +327,31 @@ export class Office {
 
     this.signoffPending = false;
     this.meetingName = null;
-    this.teamState.design = "마침";
-    this.addNote("✅", "선생님 결재 끝 — 활동지 집필로 넘어갑니다.", "mint");
+    if (waiting) this.teamState[waiting] = "마침";
+    this.addNote("✅", "선생님 결재 끝 — 다음 단계로 넘어갑니다.", "mint");
     for (const agent of attendees) {
       agent.status = "대기";
       agent.seat = this.chairFor(agent);
       this.goTo(agent, agent.seat);
     }
     yield 1.5;
+  }
 
-    // ⑧ ~ 마지막 업무 — 각본 배열을 그대로 따라간다 (단계를 늘려도 안 깨진다)
-    for (let i = 8; i < DAY_PLAN.length - 1; i += 1) {
-      const step = DAY_PLAN[i];
-      this.stepIndex = i;
-      if (!step.team) continue;
-      if (PENDING_INPUT[step.team]) {
-        yield* this.noInputYet(step.team);
-        continue;
-      }
-      yield* this.runTeam(step.team, step.secs ?? 5);
-      // 학습지 디자인팀은 수업자료팀에게서 원고를 받아 이어서 작업한다
-      if (step.team === "slide") yield* this.runTeam("print", 5);
-    }
+  /** 그 팀이 일을 마치고, 팀장이 교무실로 걸어와 보고 */
+  private *briefing(step: DayStep): Generator<number | (() => boolean), void, void> {
+    const teamId = step.team ?? "desk";
+    // 보고도 일이다. 먼저 그 팀 몫을 하고 나서 걸어온다
+    if (PENDING_INPUT[teamId]) yield* this.noInputYet(teamId);
+    else yield* this.runTeam(teamId, step.secs ?? 4);
 
-    // ⑬ 브리핑 — 비서가 교무실로 걸어와 보고
-    const brief = this.byId.get(LEADS.desk.id);
-    if (brief) {
-      brief.status = "보고하러 감";
-      brief.seat = null;
-      this.goTo(brief, BRIEFING_SPOT);
-      yield () => this.settled(brief);
-      this.say(brief, `${ME.callsign}, 오늘 업무가 정리됐어요.`, 4);
-      yield 2;
-    }
-
-    // 보고가 끝나면 하루를 닫는다. 시계는 여기서 멈추고,
-    // 비서가 자리로 돌아가는 건 그 뒤에 조용히 이어진다 (퇴근 시각이 밀리지 않게)
-    this.stepIndex = DAY_PLAN.length - 1;
-    this.dayOver = true;
-    this.running = false;
-    this.addNote("🌙", "오늘 업무 종료. 내일 08:00에 다시 출근합니다.", "lav");
-
-    if (brief) {
-      brief.seat = this.chairFor(brief);
-      brief.status = "대기";
-      this.goTo(brief, brief.seat);
-    }
+    const lead = this.byId.get(LEADS[teamId]?.id ?? "");
+    if (!lead) { yield 1; return; }
+    lead.status = "보고하러 감";
+    lead.seat = null;
+    this.goTo(lead, BRIEFING_SPOT);
+    yield () => this.settled(lead);
+    this.say(lead, `${ME.callsign}, 오늘 업무가 정리됐어요.`, 4);
+    yield 2;
   }
 
   /**

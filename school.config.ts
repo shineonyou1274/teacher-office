@@ -183,6 +183,54 @@ export const STAFF: StaffEntry[] = [
     thoughts: ["12개 팀 보고를 한 장으로 줄입니다.", "숫자 없는 보고는 다시 받아와요."] },
 ];
 
+/**
+ * 하루 순서 — **이 교무실이 선생님 업무 순서대로 돌게 하는 곳입니다.**
+ *
+ * 위 DEPARTMENTS 가 "누가 있나"라면, 여기는 "무엇을 먼저 하나"입니다.
+ * 이걸 안 고치면 팀 이름만 바꾼 채 남의 순서대로 돌아갑니다.
+ *
+ * 순서를 바꾸고 싶으면 줄 순서를 바꾸세요. 단계를 빼려면 줄을 지우고,
+ * 더하려면 줄을 늘리면 됩니다. 화면이 알아서 따라갑니다.
+ *
+ * kind 를 안 적으면 그냥 지나가는 단계입니다.
+ *   출근   — 전원이 복도를 지나 자리로 갑니다 (하루에 한 번)
+ *   결재   — **선생님이 버튼을 누를 때까지 멈춥니다** (하루에 한 번)
+ *   브리핑 — 그 팀 팀장이 교무실로 걸어와 보고합니다
+ *   종료   — 하루를 닫습니다
+ */
+export type DayStep = {
+  title: string;
+  /** 이 단계에서 일하는 팀 id. 없으면 화면 표시만 바뀝니다 */
+  team?: string;
+  /** 화면에서 몇 초쯤 걸리게 할지 */
+  secs?: number;
+  kind?: "출근" | "결재" | "브리핑" | "종료";
+  /** 기록에 남길 한 줄 (선택) */
+  note?: string;
+  /** 결재 단계에서 협의회실에 모일 팀장들 */
+  attendees?: string[];
+};
+
+export const DAY_PLAN: DayStep[] = [
+  { title: "출근 전" },
+  { title: "08:00 전원 출근", kind: "출근" },
+  { title: "자료 조사", team: "research", secs: 6 },
+  { title: "학습자 분석", team: "learner", secs: 5 },
+  { title: "수업 아이디어 10개", team: "design", secs: 7 },
+  { title: "교육과정 검수", team: "review", secs: 6 },
+  { title: "수업안 3개로 좁히기", secs: 1.5, note: "수업 설계팀: 10개 중 3개로 좁혔습니다 — 검수 통과분만" },
+  { title: "선생님 결재 대기", kind: "결재", team: "design", attendees: ["design", "review", "desk"] },
+  { title: "활동지 집필", team: "write", secs: 7 },
+  { title: "수업자료 제작", team: "slide", secs: 6 },
+  { title: "인쇄용 학습지 정리", team: "print", secs: 5 },
+  { title: "평가 문항 정리", team: "assess", secs: 5 },
+  { title: "관찰 기록 정리", team: "care", secs: 4 },
+  { title: "가정통신·협의 답장", team: "comm", secs: 4 },
+  { title: "성찰 기록", team: "reflect", secs: 5 },
+  { title: "교무 브리핑", team: "desk", kind: "브리핑" },
+  { title: "업무 종료", kind: "종료" },
+];
+
 /** 아직 외부 연동이 안 된 팀 → 화면에 '자료 대기'로 표시 */
 export const PENDING: Record<string, string> = {
   learner: "학급 반응 데이터",
