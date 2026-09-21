@@ -1,4 +1,5 @@
-node_modules/
-dist/
-.DS_Store
-*.local
+node_modules
+dist
+
+# 설치 인터뷰가 남기는 원본 백업 — 각자 컴퓨터에만 있으면 됩니다
+*.bak
