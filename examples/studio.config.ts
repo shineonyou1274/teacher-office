@@ -9,11 +9,12 @@
 //    복사 전 원본을 남겨두시면 되돌리기 쉽습니다.
 //
 //  이 예시의 특징
-//   - 부서 9개 (12개를 억지로 채우지 않았습니다)
-//   - 자료를 밖에서 찾기 전에 **내 서랍부터** 엽니다
+//   - 부서 11개 (12개를 억지로 채우지 않았습니다)
+//   - 웹을 뒤지기 전에 **내 구글 드라이브부터** 봅니다 (gws)
 //   - **1차 추리기는 사람이** 합니다. AI가 먼저 거르지 않습니다
 //   - 결재는 하루 한 번, **흐름안 고르기** 자리입니다
-//   - 코딩·영상은 PENDING 에 넣어, 안 하는 날은 '자료 대기'로 둡니다
+//   - 영상은 기획안 → **스토리(같이 짬)** → 자동 생성 → **매일 한 화씩 연재**
+//   - 코딩과 아직 연동 안 된 자동 생성은 PENDING 에 둬서 '자료 대기'로 뜹니다
 // ══════════════════════════════════════════════════════════
 
 /** 학교·교사 기본 정보 */
@@ -25,7 +26,7 @@ export const SCHOOL = {
   /** 화면 상단 큰 제목 */
   title: "AI 교무실 — 연수·코딩·영상",
   /** 부제 한 줄 */
-  subtitle: "9개 팀이 연수를 준비하고, 고르는 건 하루에 한 번 — 흐름안입니다",
+  subtitle: "연수·코딩·영상을 11개 팀이 나눠 맡고, 고르는 건 하루에 한 번 — 흐름안입니다",
   /** 브라우저 탭 제목 */
   pageTitle: "AI 교무실",
   /** 창 하단 라벨 */
@@ -52,15 +53,17 @@ export const TEACHER = {
  * id = 고정 / name·short·icon·task·report = 자유
  */
 export const DEPARTMENTS = [
-  { id: "archive",  name: "내 자료 서랍",  short: "archive",  icon: "📁", task: "전에 정리해둔 자료부터 꺼내기",   report: "새로 찾기 전에 있는 것부터 봤어요." },
-  { id: "websearch",name: "웹 자료팀",     short: "search",   icon: "🔎", task: "바깥 자료 보태기 + 출처 확인",    report: "출처 확인된 것만 올렸어요." },
-  { id: "plan",     name: "세부 기획팀",   short: "plan",     icon: "🧭", task: "연수 흐름·시간 배분 같이 조정",   report: "흐름안 3개, 꼭지별 분 단위까지 붙였어요." },
-  { id: "slide",    name: "연수 자료팀",   short: "slide",    icon: "📊", task: "슬라이드 + 그 자리에서 해볼 것",  report: "꼭지마다 따라 할 것 하나씩 넣었어요." },
-  { id: "code",     name: "바이브코딩팀", short: "code",     icon: "💻", task: "그날 만들 도구·앱",               report: "돌아가는 것만 넘깁니다." },
-  { id: "video",    name: "영상팀",        short: "video",    icon: "🎬", task: "대본·콘티·자막",                  report: "2분 넘으면 끊을 지점을 표시했어요." },
-  { id: "review",   name: "검수팀",        short: "review",   icon: "🛡️", task: "만든 것을 기준 A·B·C로 검사",    report: "반려 사유와 고칠 자리를 같이 적어요." },
-  { id: "reflect",  name: "반응 기록팀",   short: "reflect",  icon: "📈", task: "연수 후 반응 → 다음에 쓸 패턴",   report: "잘된 이유를 조건까지 적어 남겨요." },
-  { id: "desk",     name: "비서실",        short: "desk",     icon: "📋", task: "전체 한줄보고 + 오늘 결정할 1개", report: "결정할 것만 남겨드려요." },
+  { id: "drive",    name: "내 드라이브팀",  short: "drive",    icon: "📁", task: "내 구글 드라이브에서 먼저 찾기 (gws)",  report: "이미 있는 것부터 꺼냈어요. 새로 안 만듭니다." },
+  { id: "websearch",name: "웹 자료팀",      short: "search",   icon: "🔎", task: "바깥 자료 보태기 + 출처 확인",          report: "출처 확인된 것만 올렸어요." },
+  { id: "plan",     name: "세부 기획팀",    short: "plan",     icon: "🧭", task: "연수 흐름·시간 배분 같이 조정",         report: "흐름안 3개, 꼭지별 분 단위까지 붙였어요." },
+  { id: "slide",    name: "연수 자료팀",    short: "slide",    icon: "📊", task: "슬라이드 + 그 자리에서 해볼 것",        report: "꼭지마다 따라 할 것 하나씩 넣었어요." },
+  { id: "code",     name: "바이브코딩팀",   short: "code",     icon: "💻", task: "그날 만들 도구·앱",                     report: "돌아가는 것만 넘깁니다." },
+  { id: "story",    name: "영상 스토리팀",  short: "story",    icon: "🎬", task: "기획안 → 스토리 같이 짜고 화별로 쪼개기", report: "1화가 3초 안에 안 잡히면 다시 짭니다." },
+  { id: "auto",     name: "자동 생성팀",    short: "auto",     icon: "⚙️", task: "스토리를 생성 도구에 넘길 형태로",      report: "연결 안 된 건 '미연동'이라고 적어요." },
+  { id: "serial",   name: "연재 관리팀",    short: "serial",   icon: "📅", task: "오늘 올릴 1개 + 다음 화 대기열",        report: "올리는 건 선생님이 합니다. 저는 준비까지." },
+  { id: "review",   name: "검수팀",         short: "review",   icon: "🛡️", task: "만든 것을 기준 A·B·C로 검사",          report: "반려 사유와 고칠 자리를 같이 적어요." },
+  { id: "reflect",  name: "반응 기록팀",    short: "reflect",  icon: "📈", task: "연수·연재 반응 → 다음에 쓸 패턴",       report: "잘된 이유를 조건까지 적어 남겨요." },
+  { id: "desk",     name: "비서실",         short: "desk",     icon: "📋", task: "전체 한줄보고 + 오늘 결정할 1개",       report: "결정할 것만 남겨드려요." },
 ] as const;
 
 export type DeptId = (typeof DEPARTMENTS)[number]["id"];
@@ -77,19 +80,19 @@ export type StaffEntry = {
 
 /** 직원 명단 — 이름·말버릇을 우리 학교에 맞게 바꾸세요 */
 export const STAFF: StaffEntry[] = [
-  { dept: "archive", rank: "lead", name: "정해린", role: "자료 서랍 팀장", callsign: "정서랍",
+  { dept: "drive", rank: "lead", name: "정해린", role: "드라이브 팀장", callsign: "정서랍",
     colors: ["#4a3328", "#f0e2c8", "#d98e6a"],
-    thoughts: ["새로 찾기 전에 작년 것부터 봅니다.", "이미 쓴 자료를 두 번 만들지 않게요.", "어디에 뒀는지가 반이에요."] },
-  { dept: "archive", rank: "member", name: "윤도경", role: "지난 연수 정리",
+    thoughts: ["gws 로 내 드라이브부터 훑습니다.", "새로 만들기 전에 있는 것부터 찾아요.", "어디에 뒀는지가 반이에요."] },
+  { dept: "drive", rank: "member", name: "윤도경", role: "지난 자료 정리",
     colors: ["#2f2a3d", "#bcd6e8", "#7fb2a5"],
-    thoughts: ["그때 반응 좋았던 꼭지를 먼저 꺼내요.", "고쳐 쓸 수 있는 건 새로 안 만듭니다."] },
+    thoughts: ["반응 좋았던 꼭지를 먼저 꺼내요.", "고쳐 쓸 수 있는 건 새로 안 만듭니다."] },
 
   { dept: "websearch", rank: "lead", name: "서하진", role: "웹 자료 팀장", callsign: "서웹",
     colors: ["#5a3b2e", "#d8ead2", "#d98e6a"],
     thoughts: ["원문부터 확인하고 요약은 그다음이에요.", "올해 기준인지부터 봅니다.", "저작권 표시 없는 이미지는 안 씁니다."] },
   { dept: "websearch", rank: "member", name: "오시연", role: "사례 수집",
     colors: ["#3c3a4f", "#ffe6ef", "#8f7fd1"],
-    thoughts: ["남의 연수 후기에서 막힌 지점이 보여요.", "자랑 글 말고 불평 글을 봅니다."] },
+    thoughts: ["자랑 글 말고 불평 글에서 막힌 지점이 보여요.", "남의 연수 후기를 먼저 읽습니다."] },
 
   { dept: "plan", rank: "lead", name: "류지완", role: "세부 기획 팀장", callsign: "류흐름",
     colors: ["#4a3328", "#ffe6ef", "#e2857f"],
@@ -115,12 +118,23 @@ export const STAFF: StaffEntry[] = [
     colors: ["#4a3328", "#cfc4e8", "#7fb2a5"],
     thoughts: ["남이 받아서 5분 안에 켜져야 도구예요.", "설치 안내가 길면 아무도 안 씁니다."] },
 
-  { dept: "video", rank: "lead", name: "양보미", role: "영상 팀장", callsign: "양영상",
+  { dept: "story", rank: "lead", name: "양보미", role: "영상 스토리 팀장", callsign: "양스토리",
     colors: ["#3c3a4f", "#ffe6ef", "#7fb2a5"],
-    thoughts: ["첫 3초에 못 잡으면 끝까지 못 잡아요.", "2분 넘으면 끊을 지점을 표시합니다.", "자막 없으면 소리 끄고 보는 사람은 못 봐요."] },
-  { dept: "video", rank: "member", name: "박이현", role: "대본·콘티",
+    thoughts: ["기획안만 있으면 스토리는 같이 짜요. 혼자 안 정합니다.", "1화 첫 3초에 못 잡으면 2화는 안 봐요.", "한 화에 하나만 남기고 나머지는 다음 화로."] },
+  { dept: "story", rank: "member", name: "박이현", role: "화별 쪼개기",
     colors: ["#372b4a", "#d8ead2", "#e2857f"],
-    thoughts: ["말로 설명할 걸 화면으로 보여줍니다.", "컷이 안 이어지면 대본이 안 짜인 거예요."] },
+    thoughts: ["연재는 끊는 자리가 절반이에요.", "다음 화가 궁금해야 이어서 봅니다."] },
+
+  { dept: "auto", rank: "lead", name: "우가온", role: "자동 생성 팀장", callsign: "우자동",
+    colors: ["#3b2f4a", "#f0e2c8", "#e2857f"],
+    thoughts: ["연결 안 된 건 '미연동'이라고 적습니다. 됐다고 안 해요.", "스토리가 흔들리면 생성도 흔들려요.", "실패하면 실패했다고 적고 다시 겁니다."] },
+
+  { dept: "serial", rank: "lead", name: "민세온", role: "연재 관리 팀장", callsign: "민연재",
+    colors: ["#3b2f4a", "#d8ead2", "#ffd98e"],
+    thoughts: ["오늘 올릴 건 하나면 됩니다. 몰아 올리면 다음 날이 빕니다.", "다음 화 대기열을 늘 하나는 채워둬요.", "올리는 건 선생님이 합니다. 저는 준비까지."] },
+  { dept: "serial", rank: "member", name: "안리아", role: "대기열 관리",
+    colors: ["#3c3a4f", "#cfc4e8", "#7fb2a5"],
+    thoughts: ["오늘 몇 화인지부터 적습니다.", "밀린 화가 셋 넘으면 말씀드려요."] },
 
   { dept: "review", rank: "lead", name: "문가율", role: "검수 팀장", callsign: "문검수",
     colors: ["#2f2a3d", "#d8ead2", "#e2857f"],
@@ -132,16 +146,13 @@ export const STAFF: StaffEntry[] = [
   { dept: "reflect", rank: "lead", name: "도연우", role: "반응 기록 팀장", callsign: "도성찰",
     colors: ["#4a3328", "#f0e2c8", "#7fb2a5"],
     thoughts: ["잘된 이유를 못 적으면 다음에 반복 못 해요.", "망한 연수가 제일 자료가 많습니다.", "'좋았다'만 쓰면 아무것도 안 남아요."] },
-  { dept: "reflect", rank: "member", name: "민세온", role: "반응 수집",
-    colors: ["#3b2f4a", "#d8ead2", "#ffd98e"],
-    thoughts: ["끝나고 손들기 말고 쪽지로 받아요.", "조용한 분들 반응이 진짜 신호입니다."] },
 
   { dept: "desk", rank: "lead", name: "유가을", role: "비서실장", callsign: "유비서",
     colors: ["#3b2f4a", "#e2857f", "#ffd98e"],
     thoughts: ["오늘 결정할 건 하나로 줄여드릴게요.", "막힌 이유는 하나만 짚어 말씀드려요.", "숫자 없는 보고는 다시 받아옵니다."] },
-  { dept: "desk", rank: "member", name: "안리아", role: "보고 취합",
-    colors: ["#3c3a4f", "#cfc4e8", "#7fb2a5"],
-    thoughts: ["아홉 팀 보고를 한 장으로 줄입니다.", "중복 설명을 지우는 게 절반이에요."] },
+  { dept: "desk", rank: "member", name: "백서진", role: "보고 취합",
+    colors: ["#5a3b2e", "#ffe6ef", "#7fb2a5"],
+    thoughts: ["열한 팀 보고를 한 장으로 줄입니다.", "중복 설명을 지우는 게 절반이에요."] },
 ];
 
 /**
@@ -175,7 +186,7 @@ export type DayStep = {
 export const DAY_PLAN: DayStep[] = [
   { title: "출근 전" },
   { title: "08:00 전원 출근", kind: "출근" },
-  { title: "내 자료부터 꺼내기", team: "archive", secs: 5 },
+  { title: "내 드라이브에서 찾기", team: "drive", secs: 5 },
   { title: "웹에서 보태기", team: "websearch", secs: 6 },
   { title: "1차 추리기 — 선생님이 직접", secs: 2,
     note: "모인 자료를 선생님이 먼저 훑는 자리입니다. 여기서 안 걸러진 게 뒤로 넘어갑니다." },
@@ -183,7 +194,9 @@ export const DAY_PLAN: DayStep[] = [
   { title: "흐름안 고르기", kind: "결재", team: "plan", attendees: ["plan", "review", "desk"] },
   { title: "연수 자료 만들기", team: "slide", secs: 7 },
   { title: "바이브코딩", team: "code", secs: 6 },
-  { title: "영상 만들기", team: "video", secs: 6 },
+  { title: "AI와 영상 스토리 짜기", team: "story", secs: 7 },
+  { title: "자동 생성에 넘기기", team: "auto", secs: 4 },
+  { title: "오늘 연재분 준비", team: "serial", secs: 4 },
   { title: "만든 것 검수", team: "review", secs: 6 },
   { title: "반응 기록", team: "reflect", secs: 4 },
   { title: "한 줄 보고", team: "desk", kind: "브리핑" },
@@ -193,7 +206,7 @@ export const DAY_PLAN: DayStep[] = [
 /** 아직 외부 연동이 안 된 팀 → 화면에 '자료 대기'로 표시 */
 export const PENDING: Record<string, string> = {
   code: "오늘 만들 도구 (안 하는 날은 이대로 두세요)",
-  video: "오늘 만들 영상 소재 (안 하는 날은 이대로 두세요)",
+  auto: "영상 생성 도구 연동 (이 교무실과 아직 연결 안 됨)",
 };
 
 /** 결과물 보관함 링크 (비우면 버튼이 숨겨집니다) */
