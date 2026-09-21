@@ -93,7 +93,12 @@ function show(data) {
   console.log("");
 }
 
-const [cmd, ...rest] = argv.slice(2);
+const args = argv.slice(2);
+// --팀 <id> 로 어느 팀 자리에 뜰지 고를 수 있습니다.
+// 연재를 안 하는 교무실에는 그런 팀이 없어도 됩니다 — 대기열은 그대로 돌아갑니다
+const teamFlag = args.findIndex((a) => a === "--팀" || a === "--team");
+const TEAM = teamFlag >= 0 ? args[teamFlag + 1] : "serial";
+const [cmd, ...rest] = teamFlag >= 0 ? args.filter((_, i) => i !== teamFlag && i !== teamFlag + 1) : args;
 const text = rest.join(" ").trim();
 const data = await load();
 
@@ -101,7 +106,7 @@ switch (cmd) {
   case "목록":
   case "list": {
     show(data);
-    await report(data);
+    await report(data, TEAM);
     break;
   }
 
@@ -113,7 +118,7 @@ switch (cmd) {
     await save(data);
     console.log(`\n대기열에 넣었습니다 — ${ep.no}화 · ${ep.title}`);
     show(data);
-    await report(data);
+    await report(data, TEAM);
     break;
   }
 
@@ -126,13 +131,13 @@ switch (cmd) {
       exit(1);
     }
     const ep = data.queue.shift();
-    if (!ep) { console.error("\n대기열이 비었습니다. 먼저 추가해주세요.\n"); await report(data); exit(1); }
+    if (!ep) { console.error("\n대기열이 비었습니다. 먼저 추가해주세요.\n"); await report(data, TEAM); exit(1); }
     data.today = ep;
     await save(data);
     console.log(`\n오늘 올릴 것 — ${ep.no}화 · ${ep.title}`);
     console.log("올리는 건 선생님이 하십니다. 올리신 뒤에  npm run serial -- 올림  을 쳐주세요.");
     show(data);
-    await report(data);
+    await report(data, TEAM);
     break;
   }
 
@@ -145,7 +150,7 @@ switch (cmd) {
     await save(data);
     console.log(`\n${ep.no}화를 올린 것으로 적었습니다.`);
     show(data);
-    await report(data);
+    await report(data, TEAM);
     break;
   }
 
@@ -157,7 +162,7 @@ switch (cmd) {
     data.today = null;
     await save(data);
     show(data);
-    await report(data);
+    await report(data, TEAM);
     break;
   }
 
@@ -170,6 +175,9 @@ switch (cmd) {
   오늘                       하나 꺼내 '오늘 올릴 것'으로
   올림                       올린 것으로 넘기기 (실제로 올리신 뒤에)
   빼기                       오늘 것을 대기열로 되돌리기
+
+  --팀 <id>                  화면의 어느 팀 자리에 띄울지 (기본 serial)
+                             그런 팀이 없으면 대기열만 돌아갑니다
 
 이 도구는 아무것도 올리지 않습니다. 준비까지만 합니다.
 `);
