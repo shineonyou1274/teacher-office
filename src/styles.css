@@ -164,3 +164,14 @@ footer .tiny-note { margin: 6px 0 0; font-size: 11px; }
   color: var(--green);
   vertical-align: middle;
 }
+
+/* 원작 표시 — 지우지 않는 조건으로 나누는 줄 */
+footer .origin {
+  margin-top: 6px;
+  font-size: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+}
+footer .origin > span:first-child { font-weight: 600; }

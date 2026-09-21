@@ -17,6 +17,18 @@ const QUICK = [
   { label: "자리 지키기", cmd: "자리 지키기" },
 ];
 
+/** 크레딧 줄에 붙는 링크들. 없으면 아무것도 안 그린다 */
+function CreditLinks({ links }: { links?: { icon: string; label: string; url: string }[] }) {
+  if (!links?.length) return null;
+  return (
+    <span className="links">
+      {links.map((l) => (
+        <a key={l.url} href={l.url} target="_blank" rel="noreferrer">{l.icon} {l.label}</a>
+      ))}
+    </span>
+  );
+}
+
 export default function App() {
   const office = useMemo(() => new Office(), []);
   const [snap, setSnap] = useState<ViewState>(() => office.view());
@@ -247,19 +259,20 @@ export default function App() {
           <p className="mine">
             <b>{SCHOOL.name} — {CREDITS.maker.name}</b>
             {CREDITS.maker.note ? <span> · {CREDITS.maker.note}</span> : null}
-            {CREDITS.maker.links.length ? (
-              <span className="links">
-                {CREDITS.maker.links.map((l) => (
-                  <a key={l.url} href={l.url} target="_blank" rel="noreferrer">{l.icon} {l.label}</a>
-                ))}
-              </span>
-            ) : null}
+            <CreditLinks links={CREDITS.maker.links} />
           </p>
         ) : (
-          <p className="mine muted">school.config.ts 의 CREDITS 에 이름을 넣으면 여기 표시됩니다</p>
+          <p className="mine muted">school.config.ts 의 CREDITS.maker 에 이름을 넣으면 여기 표시됩니다</p>
         )}
+
+        {/* 저작권 표시 — 지우지 않는 줄 */}
+        <p className="origin">
+          <span>© {CREDITS.copyright.year} {CREDITS.copyright.holder}. All rights reserved.</span>
+          <CreditLinks links={CREDITS.copyright.links} />
+        </p>
+
         <p className="tiny-note">
-          비서실장 {LEADS.desk.name} · AI 직원 {DEPARTMENTS.length}개 부서 · 자유롭게 고쳐 쓰세요
+          비서실장 {LEADS.desk.name} · AI 직원 {DEPARTMENTS.length}개 부서
         </p>
       </footer>
     </main>

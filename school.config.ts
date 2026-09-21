@@ -194,8 +194,26 @@ export const STORAGE_LINK = "";
 
 /**
  * 화면 맨 아래 크레딧.
- * 이 프로그램은 자유 라이선스입니다. 마음대로 고치고 이름 붙여 쓰세요.
+ *
+ * ⚠️ copyright 줄은 지우지 마세요. 이 프로그램의 저작권 표시입니다.
+ *    학교 이름·부서·직원·사규는 마음대로 바꾸셔도 됩니다.
  */
-export const CREDITS = {
-  maker: { name: "", note: "", links: [] as { icon: string; label: string; url: string }[] },
+type Credit = {
+  name: string;
+  note?: string;
+  links?: { icon: string; label: string; url: string }[];
+};
+
+export const CREDITS: { copyright: { year: string; holder: string; links?: Credit["links"] }; maker: Credit } = {
+  /** 저작권 표시 — 지우지 마세요 */
+  copyright: {
+    year: "2026",
+    holder: "Shiny Peace",
+    links: [
+      { icon: "📷", label: "@shiny.vibe_logic", url: "https://www.instagram.com/shiny.vibe_logic/" },
+      { icon: "🧵", label: "Threads", url: "https://www.threads.com/@shiny.vibe_logic" },
+    ],
+  },
+  /** 이 교무실을 쓰는 나 — 이름을 비우면 이 줄은 안 나옵니다 */
+  maker: { name: "", note: "", links: [] },
 };
