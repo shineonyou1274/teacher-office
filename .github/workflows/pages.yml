@@ -1,0 +1,49 @@
+# 화면을 인터넷 주소로 올린다.
+#
+# main 에 밀 때마다 자동으로 다시 올라갑니다.
+# 처음 한 번만 저장소 Settings → Pages → Source 를 "GitHub Actions" 로 바꾸세요.
+#
+# 올라가는 건 화면뿐입니다. 검사 기록(public/state.json)은 각자 컴퓨터에만
+# 있으므로, 인터넷에 올라간 화면은 각본만 돕니다.
+name: 화면 배포
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 여러 번 밀어도 마지막 것만 올라가게
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

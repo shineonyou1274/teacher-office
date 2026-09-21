@@ -27,13 +27,20 @@ export default function App() {
   const [live, setLive] = useState<Live | null>(null);
 
   // 실제 작업 기록(public/state.json)을 읽는다. 없으면 각본만 돈다.
-  // npm run check 나 /검수 가 돌면 이 파일이 바뀌므로 5초마다 다시 본다
+  // 기록이 생긴 뒤로는 5초마다, 그 전에는 20초마다 본다.
+  // 파일이 없는 게 기본이라, 없을 때 5초마다 두드리면 헛일이라서다
   useEffect(() => {
     let alive = true;
-    const read = () => { loadLive().then((next) => { if (alive) setLive(next); }); };
+    let timer = 0;
+    const read = () => {
+      loadLive().then((next) => {
+        if (!alive) return;
+        setLive(next);
+        timer = window.setTimeout(read, next ? 5000 : 20000);
+      });
+    };
     read();
-    const timer = setInterval(read, 5000);
-    return () => { alive = false; clearInterval(timer); };
+    return () => { alive = false; window.clearTimeout(timer); };
   }, []);
 
   // 애니메이션 루프 — 화면 갱신은 초당 20번이면 충분합니다
