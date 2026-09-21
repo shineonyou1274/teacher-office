@@ -5,6 +5,8 @@
 혼자 다 하지 말고, 역할을 쪼개서 맡겨보자는 도구입니다.
 설치하면 바로 돌아갑니다. **연동도, API 키도 필요 없습니다.**
 
+**→ [설치 없이 먼저 보기](https://shineonyou1274.github.io/teacher-office/)** · 링크만 누르면 화면이 열립니다
+
 ---
 
 ## 1. 실행하기 (10분)
@@ -162,9 +164,12 @@ AI에게 "금칙어 검사해"라고 시키고 "0건입니다"를 믿으면 그�
 화면만 따로 올려서 링크로 보여줄 수 있습니다. 설치 없이 열리니, 동료에게
 먼저 구경시키고 마음에 들면 내려받게 하는 흐름이 됩니다.
 
-1. 저장소 **Settings → Pages → Source** 를 `GitHub Actions` 로 바꿉니다 (처음 한 번만)
-2. `main` 에 밀면 `.github/workflows/pages.yml` 이 알아서 올립니다
-3. 몇 분 뒤 `https://<내아이디>.github.io/teacher-office/` 가 열립니다
+1. `main` 에 밀면 `.github/workflows/pages.yml` 이 알아서 올립니다
+2. 몇 분 뒤 `https://<내아이디>.github.io/teacher-office/` 가 열립니다
+
+**빈 화면이 뜨면** 저장소 **Settings → Pages → Source** 를 보세요.
+`Deploy from a branch` 로 되어 있으면 저장소 폴더를 그대로 올리는 것이라,
+개발용 `index.html` 이 떠서 아무것도 안 보입니다. **`GitHub Actions`** 로 바꾸면 됩니다.
 
 올라가는 건 **화면뿐**입니다. 검사 기록은 각자 컴퓨터에만 있으므로 인터넷에
 올라간 화면은 각본만 돕니다. 학교 이름도 저장소에 들어 있는 값으로 뜨니,
