@@ -50,7 +50,7 @@ export const TEACHER = {
 };
 
 /**
- * 부서 12개.
+ * 부서 목록 (3~12개).
  * id = 고정 / name·short·icon·task·report = 자유
  */
 export const DEPARTMENTS = [
