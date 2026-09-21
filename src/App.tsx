@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CREDITS, DEPARTMENTS, SCHOOL, STORAGE_LINK } from "../school.config";
 import Canvas from "./engine/Canvas";
 import { Office, STEP_NAMES, type Msg, type ViewState } from "./engine/sim";
-import { configWarnings, LEADS, ME } from "./engine/staff";
+import { configWarnings, LEADS, ME, ROSTER } from "./engine/staff";
 import { ago, loadLive, type Live } from "./engine/live";
 
 const SOURCE_LABEL: Record<NonNullable<Msg["source"]>, string> = {
@@ -255,15 +255,15 @@ export default function App() {
       {snap.meetingName ? <div className="toast">🗣️ {snap.meetingName} — 협의회실</div> : null}
 
       <footer>
+        {/* 이름을 안 넣었으면 아무것도 안 그린다.
+            넣는 법은 school.config.ts 주석과 README 에 있지, 화면에 있을 말이 아니다 */}
         {CREDITS.maker.name ? (
           <p className="mine">
             <b>{SCHOOL.name} — {CREDITS.maker.name}</b>
             {CREDITS.maker.note ? <span> · {CREDITS.maker.note}</span> : null}
             <CreditLinks links={CREDITS.maker.links} />
           </p>
-        ) : (
-          <p className="mine muted">school.config.ts 의 CREDITS.maker 에 이름을 넣으면 여기 표시됩니다</p>
-        )}
+        ) : null}
 
         {/* 저작권 표시 — 지우지 않는 줄 */}
         <p className="origin">
@@ -272,7 +272,7 @@ export default function App() {
         </p>
 
         <p className="tiny-note">
-          비서실장 {LEADS.desk.name} · AI 직원 {DEPARTMENTS.length}개 부서
+          {DEPARTMENTS.length}개 부서 · AI 직원 {ROSTER.length}명 · 비서실장 {LEADS.desk.name}
         </p>
       </footer>
     </main>
