@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CREDITS, DEPARTMENTS, SCHOOL, STORAGE_LINK } from "../school.config";
 import Canvas from "./engine/Canvas";
 import { Office, STEP_NAMES, type Msg, type ViewState } from "./engine/sim";
-import { configWarnings, LEADS, ME, ROSTER } from "./engine/staff";
+import { configWarnings, FRONT_DESK, ME, ROSTER } from "./engine/staff";
 import { ago, loadLive, type Live } from "./engine/live";
 
 const SOURCE_LABEL: Record<NonNullable<Msg["source"]>, string> = {
@@ -272,7 +272,7 @@ export default function App() {
         </p>
 
         <p className="tiny-note">
-          {DEPARTMENTS.length}개 부서 · AI 직원 {ROSTER.length}명 · 비서실장 {LEADS.desk.name}
+          {DEPARTMENTS.length}개 부서 · AI 직원 {ROSTER.length}명 · 비서 {FRONT_DESK.name}
         </p>
       </footer>
     </main>

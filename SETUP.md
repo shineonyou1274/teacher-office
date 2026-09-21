@@ -97,10 +97,13 @@ SETUP.md 대로 이어서 해줘.
 { title: "자료 찾기", team: "research", secs: 6 },
 ```
 
-**② `school.config.ts` 의 `DEPARTMENTS` 12줄**
+**② `school.config.ts` 의 `DEPARTMENTS`**
 
 - **id 는 절대 바꾸지 마세요.** `research, learner, design, review, write, slide, print, assess, care, comm, reflect, desk` 그대로. 화면이 이 id로 움직입니다.
-- **12개를 유지하세요.** 안 쓰는 팀은 지우지 말고, 그 선생님이 실제로 하는 다른 일로 이름을 바꾸세요.
+- **개수는 3~12개 사이에서 자유입니다. 안 쓰는 팀은 지우세요.**
+  억지로 12개를 채우면 한 번도 안 부르는 방이 생기고, 그게 '내 일 같지 않다'는
+  느낌의 원인이 됩니다. 1단계에서 확인받은 순서에 나오는 일만 팀으로 만드세요.
+  6개 이하면 교실이 한 줄로 섭니다.
 - 바꾸는 건 `name`(팀 이름) · `icon`(이모지 1개) · `task`(오늘 하는 일) · `report`(끝내고 하는 말).
 - **1단계에서 확인받은 순서에 팀을 맞추세요.** 제 순서를 그대로 두지 마세요.
 - 2단계에서 고른 단계의 팀에는 `STAFF` 에 팀원을 한 명 더 붙이세요.

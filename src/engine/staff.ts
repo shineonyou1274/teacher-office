@@ -61,14 +61,31 @@ export const LEADS: Record<string, Profile> = Object.fromEntries(
 export const TEAM_INFO: Record<string, { task: string; report: string; name: string }> =
   Object.fromEntries(DEPARTMENTS.map((d) => [d.id, { task: d.task, report: d.report, name: d.name }]));
 
+/**
+ * 지시창에서 답하는 사람.
+ *
+ * 비서실(`desk`)이 있으면 그 팀장이, 없으면 마지막 부서의 팀장이 맡습니다.
+ * 부서를 줄여 쓰는 교무실에서도 대답할 사람이 반드시 한 명은 있도록.
+ */
+export const FRONT_DESK: Profile =
+  LEADS.desk
+  ?? LEADS[DEPARTMENTS[DEPARTMENTS.length - 1]?.id ?? ""]
+  ?? ROSTER.find((s) => s.rank === "lead")
+  ?? ROSTER[0]
+  ?? ME;
+
 /** 아직 자료가 없어 멈춰 있는 부서 */
 export const PENDING_INPUT: Record<string, string> = PENDING;
 
 /** 설정이 엉켰을 때 조용히 깨지지 않게 먼저 알려준다 */
 export function configWarnings(): string[] {
   const out: string[] = [];
-  if (DEPARTMENTS.length !== 12) {
-    out.push(`부서가 ${DEPARTMENTS.length}개입니다. 교무실 배치가 12칸 고정이라 12개를 유지해야 합니다.`);
+  // 개수는 자유입니다. 안 쓰는 부서를 억지로 채우지 않게 범위만 봅니다
+  if (DEPARTMENTS.length < 3) {
+    out.push(`부서가 ${DEPARTMENTS.length}개입니다. 하루가 돌려면 3개는 있어야 해요 (일하는 팀·검수·비서실).`);
+  }
+  if (DEPARTMENTS.length > 12) {
+    out.push(`부서가 ${DEPARTMENTS.length}개입니다. 교실이 한 줄에 6칸씩 두 줄이라, 13번째부터는 화면에 안 나옵니다.`);
   }
   for (const dept of DEPARTMENTS) {
     const leads = ROSTER.filter((s) => s.deptId === dept.id && s.rank === "lead");

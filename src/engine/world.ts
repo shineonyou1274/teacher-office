@@ -15,7 +15,18 @@ import { DEPARTMENTS } from "../../school.config";
 
 export const TILE_PX = 16;
 export const MAP_COLS = 68;
-export const MAP_ROWS = 48;
+
+// ── 몇 칸짜리 교무실인가 ────────────────────────────────
+// 부서 수에 맞춰 층을 정합니다. 한 줄에 최대 6칸.
+// 6개 이하면 1층만 쓰고 지도가 그만큼 짧아집니다. 안 쓰는 부서를 억지로
+// 채워 넣지 않아도 되게 하려는 것입니다.
+const PER_FLOOR = 6;
+const TEAM_COUNT = Math.max(1, DEPARTMENTS.length);
+const FLOORS = TEAM_COUNT > PER_FLOOR ? 2 : 1;
+/** 1층에 놓을 개수 — 두 층이면 반씩 나눈다 */
+const FIRST_FLOOR = Math.ceil(TEAM_COUNT / FLOORS);
+
+export const MAP_ROWS = FLOORS === 2 ? 48 : 32;
 export const MAP_PX_W = MAP_COLS * TILE_PX;
 export const MAP_PX_H = MAP_ROWS * TILE_PX;
 
@@ -40,17 +51,24 @@ export type Space = {
 
 // ── 배치 상수 ──────────────────────────────────────────
 const TOP_Y = 2, TOP_H = 11;         // 윗층 (교무실·회의실·휴게실)
-const FLOOR1_Y = 17, FLOOR2_Y = 33;  // 교실 두 줄
+const FLOOR1_Y = 17, FLOOR2_Y = 33;  // 교실 줄
 const TEAM_W = 10, TEAM_H = 12;
 const TEAM_GAP = 1;
-const TEAM_X0 = 1;
 
-/** i번째 부서 방 (0~11) — 앞 6개는 1층, 뒤 6개는 2층 */
+/** 그 줄에 몇 칸이 서는지 보고 가운데로 모은다 */
+function rowStartX(countInRow: number): number {
+  const width = countInRow * TEAM_W + (countInRow - 1) * TEAM_GAP;
+  return Math.max(1, Math.floor((MAP_COLS - width) / 2));
+}
+
+/** i번째 부서 방 — 앞쪽은 1층, 넘치면 2층 */
 function teamSpace(index: number): Space {
   const meta = DEPARTMENTS[index];
-  const col = index % 6;
-  const x = TEAM_X0 + col * (TEAM_W + TEAM_GAP);
-  const upper = index < 6;
+  const onFirst = index < FIRST_FLOOR;
+  const col = onFirst ? index : index - FIRST_FLOOR;
+  const countInRow = onFirst ? FIRST_FLOOR : TEAM_COUNT - FIRST_FLOOR;
+  const x = rowStartX(countInRow) + col * (TEAM_W + TEAM_GAP);
+  const upper = onFirst;
   const y = upper ? FLOOR1_Y : FLOOR2_Y;
 
   // 책상 3개를 가로로

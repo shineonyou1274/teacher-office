@@ -8,7 +8,7 @@
  */
 import { DAY_PLAN, DEPARTMENTS, type DayStep } from "../../school.config";
 import { findRoute } from "./pathfind";
-import { ROSTER, PENDING_INPUT, TEAM_INFO, LEADS, ME, type Profile } from "./staff";
+import { ROSTER, PENDING_INPUT, TEAM_INFO, LEADS, FRONT_DESK, ME, type Profile } from "./staff";
 import {
   MAP_COLS, FRONT_DOOR, MEETING_CHAIRS, BRIEFING_SPOT, TEACHER_CHAIR,
   spaceOf, type Cell,
@@ -118,7 +118,7 @@ export class Office {
     for (const seed of ROSTER) this.addAgent(seed, spawn, "출근 전");
 
     this.addNote("🍎", "교무실 준비 완료. ‘오늘 업무 시작’을 누르면 전원 출근합니다.", "lav");
-    const secretary = LEADS.desk;
+    const secretary = FRONT_DESK;
     if (secretary) {
       this.addMsg("staff", secretary.name,
         `${ME.callsign}, 교무 비서실 ${secretary.name}입니다. 궁금한 건 여기 물어보세요.`);
@@ -240,7 +240,7 @@ export class Office {
    * 각 줄의 kind 를 보고 무엇을 할지 고릅니다.
    */
   private *runDay(): Generator<number | (() => boolean), void, void> {
-    const desk = this.byId.get(LEADS.desk?.id ?? "");
+    const desk = this.byId.get(FRONT_DESK.id);
 
     for (let i = 1; i < DAY_PLAN.length; i += 1) {
       const step = DAY_PLAN[i];
@@ -295,7 +295,7 @@ export class Office {
       agent.status = "대기";
       agent.pose = "type";
     }
-    this.say(this.byId.get(LEADS.desk?.id ?? ""), `${ME.callsign}, 오늘 업무 시작합니다.`, 3);
+    this.say(this.byId.get(FRONT_DESK.id), `${ME.callsign}, 오늘 업무 시작합니다.`, 3);
     yield 1.5;
   }
 
@@ -305,7 +305,7 @@ export class Office {
     const waiting = step.team;
     if (waiting) this.teamState[waiting] = "결재 대기";
 
-    const ids = step.attendees?.length ? step.attendees : [waiting, "desk"].filter(Boolean) as string[];
+    const ids = step.attendees?.length ? step.attendees : [waiting, FRONT_DESK.deptId].filter(Boolean) as string[];
     const attendees = ids
       .map((d) => LEADS[d])
       .filter(Boolean)
@@ -339,7 +339,7 @@ export class Office {
 
   /** 그 팀이 일을 마치고, 팀장이 교무실로 걸어와 보고 */
   private *briefing(step: DayStep): Generator<number | (() => boolean), void, void> {
-    const teamId = step.team ?? "desk";
+    const teamId = step.team ?? FRONT_DESK.deptId;
     // 보고도 일이다. 먼저 그 팀 몫을 하고 나서 걸어온다
     if (PENDING_INPUT[teamId]) yield* this.noInputYet(teamId);
     else yield* this.runTeam(teamId, step.secs ?? 4);
@@ -451,23 +451,27 @@ export class Office {
     if (/풀어|쉬어|해제/.test(text)) return this.setFocusMode(false);
     if (/승인|결재|오케이|진행해/.test(text) && this.signoffPending) {
       this.signOff();
-      return this.addMsg("staff", LEADS.desk.name, "결재 받았습니다. 집필팀에 바로 넘길게요.");
+      return this.addMsg("staff", FRONT_DESK.name, "결재 받았습니다. 집필팀에 바로 넘길게요.");
     }
     if (/왜|늦|지연|막히|막힌|막힘|안 ?되|문제/.test(text)) return this.sayBlocked();
     if (/뭐|현황|상황|진행|보고|어디까지/.test(text)) return this.sayProgress();
 
-    this.addMsg("staff", LEADS.desk.name,
+    this.addMsg("staff", FRONT_DESK.name,
       "이렇게 물어보시면 제일 빨라요 — “어디까지 됐어?” / “막힌 데 있어?” / “검수팀 상황” / “자리 지키기”.");
   }
 
   private teamFromText(text: string): string | null {
-    for (const [id, words] of TEAM_WORDS) if (words.some((w) => text.includes(w))) return id;
+    // 설정에서 지운 부서는 못 부르게 한다. 안 그러면 없는 팀을 찾다 깨진다
+    const exists = (id: string) => DEPARTMENTS.some((d) => d.id === id);
+    for (const [id, words] of TEAM_WORDS) {
+      if (exists(id) && words.some((w) => text.includes(w))) return id;
+    }
     const staff = ROSTER.find((s) => text.includes(s.name) || (s.callsign && text.includes(s.callsign)));
-    return staff?.deptId ?? null;
+    return staff && exists(staff.deptId) ? staff.deptId : null;
   }
 
   private sayProgress() {
-    const lead = LEADS.desk;
+    const lead = FRONT_DESK;
     if (!this.running && !this.dayOver) {
       return this.addMsg("staff", lead.name, "아직 출근 전이에요. ‘오늘 업무 시작’을 눌러주시면 전원 출근합니다.");
     }
@@ -489,7 +493,7 @@ export class Office {
   }
 
   private sayBlocked() {
-    const lead = LEADS.desk;
+    const lead = FRONT_DESK;
     const lines: string[] = [];
     if (this.signoffPending) {
       lines.push(`원인은 하나예요 — ${ME.callsign} 결재 대기입니다.`);
@@ -520,7 +524,7 @@ export class Office {
 
   private setFocusMode(keep: boolean) {
     this.focusOn = keep;
-    const lead = LEADS.desk;
+    const lead = FRONT_DESK;
     if (keep) {
       for (const agent of this.people) {
         if (agent.id === "teacher" || agent.status === "출근 전" || agent.status === "회의 중") continue;
