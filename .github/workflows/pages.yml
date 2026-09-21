@@ -1,7 +1,8 @@
 # 화면을 인터넷 주소로 올린다.
 #
 # main 에 밀 때마다 자동으로 다시 올라갑니다.
-# 처음 한 번만 저장소 Settings → Pages → Source 를 "GitHub Actions" 로 바꾸세요.
+# Pages 가 꺼져 있으면 이 워크플로가 켭니다. 그래도 안 되면 저장소
+# Settings → Pages → Source 를 "GitHub Actions" 로 바꿔주세요.
 #
 # 올라가는 건 화면뿐입니다. 검사 기록(public/state.json)은 각자 컴퓨터에만
 # 있으므로, 인터넷에 올라간 화면은 각본만 돕니다.
@@ -34,6 +35,10 @@ jobs:
       - run: npm ci
       - run: npm run build
       - uses: actions/configure-pages@v5
+        with:
+          # 저장소에서 Pages 가 아직 안 켜져 있으면 여기서 켠다.
+          # 이게 없으면 설정 화면에 들어가 손으로 켤 때까지 실패한다
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
