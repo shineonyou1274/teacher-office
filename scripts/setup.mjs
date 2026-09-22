@@ -15,7 +15,7 @@ import { createInterface } from "node:readline/promises";
 import { readFile, writeFile, copyFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { stdin, stdout } from "node:process";
+import { argv, stdin, stdout } from "node:process";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CONFIG = join(ROOT, "school.config.ts");
@@ -115,6 +115,19 @@ function currentField(source, key, afterMarker) {
   return match ? match[1] : "";
 }
 
+/**
+ * 기본 설정의 부서 12개. 이것과 다르면 이미 선생님 일에 맞게 짜인 것이라,
+ * 팀을 짜려고 묻는 2·3번은 물을 이유가 없습니다.
+ */
+const STOCK_TEAMS = ["research", "learner", "design", "review", "write", "slide",
+  "print", "assess", "care", "comm", "reflect", "desk"];
+
+const configPeek = await readFile(CONFIG, "utf8");
+const teamIds = [...configPeek.matchAll(/\{ id: "(\w+)"/g)].map((m) => m[1]);
+const tailored = teamIds.length > 0 &&
+  (teamIds.length !== STOCK_TEAMS.length || teamIds.some((id) => !STOCK_TEAMS.includes(id)));
+const nameplateOnly = argv.includes("--이름표만") || tailored;
+
 console.log(`
 ${bold("AI 교무실 설치 인터뷰")}
 ${dim("답하시는 대로 설정 파일을 고쳐 드립니다. 엔터만 치면 지금 값을 그대로 둡니다.")}
@@ -123,12 +136,20 @@ ${dim("중간에 그만두려면 Ctrl + C 를 누르세요. 아무것도 바뀌�
 
 const dimNote = "> 설치 인터뷰(npm run setup)에서 받아 적은 것입니다. 정리는 SETUP.md 를 AI에게 읽히면 이어서 합니다.";
 
-const configBefore = await readFile(CONFIG, "utf8");
+const configBefore = configPeek;
 const rulebookBefore = await readFile(RULEBOOK, "utf8");
 
 // ── 1. 이름표 ────────────────────────────────────────────
-console.log(bold("1 / 3 · 이름표\n"));
-console.log(dim("   화면에 뜰 이름입니다. 이것만 정해진 답이 있고, 나머지는 자유롭게 적으시면 됩니다.\n"));
+if (nameplateOnly) {
+  console.log(bold("이름표만 묻겠습니다\n"));
+  if (tailored) {
+    console.log(dim(`   팀 ${teamIds.length}개와 하루 순서가 이미 선생님 일에 맞게 짜여 있습니다.`));
+    console.log(dim("   그걸 짜려고 묻는 질문들은 건너뜁니다. 답을 다시 적지 않으셔도 됩니다.\n"));
+  }
+} else {
+  console.log(bold("1 / 3 · 이름표\n"));
+  console.log(dim("   화면에 뜰 이름입니다. 이것만 정해진 답이 있고, 나머지는 자유롭게 적으시면 됩니다.\n"));
+}
 const schoolName = await ask("학교 이름이 어떻게 되나요?", currentField(configBefore, "name", "export const SCHOOL"), "예) 한빛고등학교");
 const teacherName = await ask("선생님 성함은? (화면 속 캐릭터 이름입니다)", currentField(configBefore, "name", "export const TEACHER"), "예) 김하늘");
 const callsign = await ask("AI 직원들이 선생님을 뭐라고 부르면 될까요?", currentField(configBefore, "callsign", "export const TEACHER"), "예) 선생님 · 부장님 · 샘");
@@ -138,20 +159,20 @@ const subject = await ask("담당 과목이나 맡은 업무는요?", currentFie
 const badge = (schoolName.trim()[0] || "校");
 
 // ── 2. 하는 일 ───────────────────────────────────────────
-console.log(bold("2 / 3 · 요즘 하는 일\n"));
-const repeated = await askFreely("요즘 가장 자주, 반복해서 하는 일이 뭔가요?", [
+if (!nameplateOnly) console.log(bold("2 / 3 · 요즘 하는 일\n"));
+const repeated = nameplateOnly ? [] : await askFreely("요즘 가장 자주, 반복해서 하는 일이 뭔가요?", [
   "수업이든 행정 업무든 상관없습니다. 여러 개여도 됩니다.",
   "예) 매주 활동지 만들기 / 생기부 정리 / 공문 기안 / 동아리 자료 / 시험 문항 출제",
 ]);
-const howIWork = await askFreely("그 일을 어떤 식으로 하세요?", [
+const howIWork = nameplateOnly ? [] : await askFreely("그 일을 어떤 식으로 하세요?", [
   "순서를 맞추려 애쓰지 마세요. 떠오르는 대로 적으시면 AI가 정리해 드립니다.",
   "예) 자료를 찾아보고 마음에 드는 걸 골라서 수업 내용에 맞게 고쳐요",
   "예) 성취기준을 보고 평가 방법부터 정해요",
 ]);
 
 // ── 3. AI 쓰면서 걸리는 것 ───────────────────────────────
-console.log(bold("3 / 3 · AI 쓰면서 걸리는 것\n"));
-const complaints = await askFreely("AI를 쓰면서 마음에 안 들었던 게 있나요?", [
+if (!nameplateOnly) console.log(bold("3 / 3 · AI 쓰면서 걸리는 것\n"));
+const complaints = nameplateOnly ? [] : await askFreely("AI를 쓰면서 마음에 안 들었던 게 있나요?", [
   "말투든 내용이든, 고치기 귀찮았던 것이든 다 좋습니다.",
   "예) 안 물어본 걸 덧붙인다 / 아는 척한다 / 번역한 문장 같다 / 다 좋다고만 한다",
   "이 답으로 금칙어를 최대 5개까지 뽑습니다 (AI가 뽑아서 확인받습니다).",
@@ -211,8 +232,12 @@ console.log(`  school.config.ts   학교 ${schoolName} · 이름 ${teacherName} 
 console.log(dim(`                     배지는 "${badge}" 로 해뒀습니다 — 화면 왼쪽 위 동그라미에 들어가는 글자입니다`));
 console.log(dim(`                     (학교 이름 첫 글자. 바꾸려면 school.config.ts 의 SCHOOL.badge)`));
 console.log(`  TEACHER_OFFICE.md  머리말에 위 이름표`);
-console.log(`  MY_ANSWERS.md      새 파일 — 2·3번 답을 그대로 적어둡니다`);
-console.log(dim(`                     (하는 일 ${repeated.length}줄 · 방식 ${howIWork.length}줄 · 불만 ${complaints.length}줄)`));
+if (!nameplateOnly) {
+  console.log(`  MY_ANSWERS.md      새 파일 — 2·3번 답을 그대로 적어둡니다`);
+  console.log(dim(`                     (하는 일 ${repeated.length}줄 · 방식 ${howIWork.length}줄 · 불만 ${complaints.length}줄)`));
+} else {
+  console.log(dim(`\n  팀과 하루 순서는 건드리지 않습니다. 바뀌는 건 위 이름표뿐입니다.`));
+}
 console.log(dim(`\n  원본은 school.config.ts.bak / TEACHER_OFFICE.md.bak 으로 남겨둡니다.\n`));
 
 const go = await askYesNo("이대로 저장할까요?");
@@ -227,7 +252,21 @@ await copyFile(CONFIG, CONFIG + ".bak");
 await copyFile(RULEBOOK, RULEBOOK + ".bak");
 await writeFile(CONFIG, config, "utf8");
 await writeFile(RULEBOOK, rulebook, "utf8");
-await writeFile(join(ROOT, "MY_ANSWERS.md"), answers, "utf8");
+// 이름표만 고칠 때는 MY_ANSWERS.md 를 만들지 않습니다.
+// 빈 답으로 덮어쓰면 예전에 적어두신 것이 사라집니다
+if (!nameplateOnly) await writeFile(join(ROOT, "MY_ANSWERS.md"), answers, "utf8");
+
+if (nameplateOnly) {
+  console.log(`
+${bold("이름표를 넣었습니다.")}
+
+  화면에 ${schoolName}${와과(schoolName)} ${teacherName}${이가(teacherName)} 뜹니다. ${bold("npm run dev")} 로 확인해 보세요.
+
+  팀 ${teamIds.length}개와 하루 순서는 그대로입니다.
+  되돌리려면 .bak 파일의 이름에서 .bak 만 지우면 됩니다.
+`);
+  process.exit(0);
+}
 
 console.log(`
 ${bold("이름표까지 끝났습니다.")}
