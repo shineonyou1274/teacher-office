@@ -11,6 +11,7 @@
     "setup": "node scripts/setup.mjs",
     "use": "node scripts/use.mjs",
     "check": "node scripts/check.mjs",
+    "record": "node scripts/record.mjs",
     "serial": "node scripts/serial.mjs",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

@@ -20,7 +20,7 @@ const note = rest.join(" ").trim();
 
 if (!teamId || !state) {
   console.error(`
-쓰는 법:  node scripts/record.mjs <팀id> <상태> "<한 줄>"
+쓰는 법:  npm run record <팀id> <상태> "<한 줄>"
 
   상태: ${STATES.join(" / ")}
   팀id: school.config.ts 의 DEPARTMENTS 에 적힌 id
