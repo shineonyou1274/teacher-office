@@ -37,6 +37,19 @@ npm install
 
 `Missing script` 오류는 대개 이 경우입니다 — 그 명령이 만들어지기 전에 받으신 것입니다.
 
+**`git pull` 이 `Aborting` 으로 멈추면** 전에 설정 파일을 고치신 것입니다.
+고친 내용을 잠시 치워두고 당겨 오면 됩니다.
+
+```bash
+git stash
+git pull
+npm install
+```
+
+`git stash` 는 **지우는 게 아니라 치워두는** 것입니다. 치워둔 내용은
+`git stash show -p` 로 볼 수 있습니다. `npm run setup` 이 어차피 학교명과
+이름을 다시 물어보니, 대개는 그걸로 새로 채우시면 됩니다.
+
 `npm run setup` 은 **설치 인터뷰**입니다. 두 부분으로 나뉩니다.
 
 - **이름표** (학교·성함·호칭·과목) — 답이 정해져 있어 이 창에서 바로 고칩니다.
@@ -321,6 +334,8 @@ claude -p "/검수 내자료.md B"     # 창을 안 열고 한 번에. cron 에 
 
 **`Missing script: "..."` 가 나와요**
 받아두신 게 오래된 것입니다. `git pull` 로 당겨 오면 됩니다.
+`git pull` 이 `Aborting` 으로 멈췄다면 아직 안 당겨진 것이니,
+`git stash` 를 먼저 치고 다시 `git pull` 하세요.
 이 교무실은 계속 고쳐지고 있어서, 전에 받은 복사본에는 새 명령이 없습니다.
 
 **`package.json` 을 못 찾는다고 나와요** (`npm error enoent`)
