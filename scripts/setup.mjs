@@ -68,9 +68,18 @@ async function prompt(text) {
 /** 한 가지를 묻는다. 엔터만 치면 지금 값 유지 */
 async function ask(question, current, hint) {
   if (hint) console.log(dim("   " + hint));
-  const answer = await prompt(`${bold(question)}\n   ${dim(`지금: ${current}`)}\n   > `);
-  console.log("");
-  return answer || current;
+  for (;;) {
+    const answer = await prompt(`${bold(question)}\n   ${dim(`지금: ${current}`)}\n   > `);
+    console.log("");
+    // "이대로 저장할까요?" 인 줄 알고 y 를 누르시는 경우가 있습니다.
+    // 그대로 받으면 화면에 과목이 "y" 로 뜹니다
+    if (/^[yn]$/i.test(answer.trim())) {
+      console.log(dim(`   "${answer.trim()}" 는 저장 여부를 묻는 자리에서 쓰는 답입니다. 저장할지는 맨 마지막에 묻습니다.`));
+      console.log(dim("   여기는 위 질문의 답을 적는 자리입니다. 그냥 두시려면 엔터만 치세요.\n"));
+      continue;
+    }
+    return answer || current;
+  }
 }
 
 async function askYesNo(question) {
