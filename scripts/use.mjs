@@ -68,9 +68,21 @@ function getField(blockText, field) {
  * 옮기는 건 학교 이름·배지·내 이름·호칭·과목 다섯 개뿐입니다.
  * 제목이나 부제는 그 설정이 무엇을 하는 곳인지를 적은 것이라 그대로 둡니다.
  */
+/** 아직 아무도 안 고친 기본값인지 — 그걸 "쓰시던 이름표"라고 부르면 안 됩니다 */
+function looksUnset(value) {
+  return !value || /^○|^김선생$|적으세요|^校$/.test(value.trim());
+}
+
 function carryNameplate(fromText, toText) {
   const moved = [];
   let out = toText;
+  const src0 = block(fromText, "SCHOOL");
+  const src1 = block(fromText, "TEACHER");
+  const unset =
+    looksUnset(src0 && getField(src0.text, "name")) &&
+    looksUnset(src1 && getField(src1.text, "name"));
+  // 설치 인터뷰를 아직 안 하신 것입니다. 기본값을 옮겨봐야 기본값입니다
+  if (unset) return { text: toText, moved: [], unset: true };
   for (const [name, fields] of [["SCHOOL", ["name", "badge"]], ["TEACHER", ["name", "callsign", "subject"]]]) {
     const src = block(fromText, name);
     const dst = block(out, name);
@@ -85,7 +97,7 @@ function carryNameplate(fromText, toText) {
     }
     out = out.slice(0, dst.start) + patched + out.slice(dst.end);
   }
-  return { text: out, moved };
+  return { text: out, moved, unset: false };
 }
 
 const args = argv.slice(2);
@@ -140,11 +152,17 @@ try {
 
 await copyFile(CONFIG, BACKUP);
 const [current, incoming] = await Promise.all([readFile(CONFIG, "utf8"), readFile(source, "utf8")]);
-const { text, moved } = whole ? { text: incoming, moved: [] } : carryNameplate(current, incoming);
+const { text, moved, unset } = whole
+  ? { text: incoming, moved: [], unset: false }
+  : carryNameplate(current, incoming);
 await writeFile(CONFIG, text, "utf8");
 
 console.log(`\n${bold("바꿨습니다")} — ${await describe(CONFIG)}`);
-if (moved.length) {
+if (unset) {
+  console.log(`\n   ${bold("이름표는 아직 기본값입니다.")} 화면에 "○○고등학교 / 김선생" 으로 뜹니다.`);
+  console.log(`   ${dim("npm run setup 을 하시면 학교 이름과 성함이 들어갑니다.")}`);
+  console.log(`   ${dim("지금 설정(팀·하루 순서)은 그대로 두고 이름표만 바뀝니다.")}`);
+} else if (moved.length) {
   console.log(`   ${dim("쓰시던 이름표는 그대로 옮겼습니다:")}`);
   for (const line of moved) console.log(`   ${dim("  " + line)}`);
   console.log(`   ${dim("예시의 이름표까지 쓰시려면: npm run use -- " + want + " --통째로")}`);
