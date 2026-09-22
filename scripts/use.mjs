@@ -5,6 +5,10 @@
  *   npm run use -- studio    examples/studio.config.ts 를 school.config.ts 로
  *   npm run use -- 되돌리기   직전 설정으로
  *
+ * 바꿔 낄 때 이름표(학교·이름·호칭·과목)는 지금 쓰던 것을 그대로 가져옵니다.
+ * npm run setup 으로 적은 것을 남의 예시 이름으로 덮으면 안 되니까요.
+ * 예시의 이름표까지 통째로 쓰려면 뒤에 --통째로 를 붙이세요.
+ *
  * 쓰면서 고치려면 설정을 자주 바꿔 끼우게 됩니다. 그때마다 복사 명령을
  * 외우지 않아도 되게 한 줄로 만들었습니다.
  * 바꾸기 전 것은 school.config.ts.bak 으로 남습니다.
@@ -42,7 +46,51 @@ async function listExamples() {
   }
 }
 
-const want = argv[2];
+/** 설정 글에서 export const <이름> = { ... }; 한 덩어리를 떼어냅니다 */
+function block(text, name) {
+  const start = text.indexOf(`export const ${name} = {`);
+  if (start < 0) return null;
+  const end = text.indexOf("\n};", start);
+  return end < 0 ? null : { start, end: end + 3, text: text.slice(start, end + 3) };
+}
+
+/** 덩어리 안에서 field: "값" 의 값만 바꿉니다 */
+function setField(blockText, field, value) {
+  const re = new RegExp(`(${field}:\\s*")([^"]*)(")`);
+  return re.test(blockText) ? blockText.replace(re, `$1${value}$3`) : blockText;
+}
+function getField(blockText, field) {
+  return blockText.match(new RegExp(`${field}:\\s*"([^"]*)"`))?.[1] ?? null;
+}
+
+/**
+ * 지금 쓰던 이름표를 새 설정으로 옮깁니다.
+ * 옮기는 건 학교 이름·배지·내 이름·호칭·과목 다섯 개뿐입니다.
+ * 제목이나 부제는 그 설정이 무엇을 하는 곳인지를 적은 것이라 그대로 둡니다.
+ */
+function carryNameplate(fromText, toText) {
+  const moved = [];
+  let out = toText;
+  for (const [name, fields] of [["SCHOOL", ["name", "badge"]], ["TEACHER", ["name", "callsign", "subject"]]]) {
+    const src = block(fromText, name);
+    const dst = block(out, name);
+    if (!src || !dst) continue;
+    let patched = dst.text;
+    for (const f of fields) {
+      const v = getField(src.text, f);
+      if (v === null) continue;
+      if (getField(patched, f) === v) continue;
+      patched = setField(patched, f, v);
+      moved.push(`${name}.${f} = "${v}"`);
+    }
+    out = out.slice(0, dst.start) + patched + out.slice(dst.end);
+  }
+  return { text: out, moved };
+}
+
+const args = argv.slice(2);
+const whole = args.includes("--통째로");
+const want = args.find((a) => !a.startsWith("--"));
 
 if (!want) {
   console.log(`\n${bold("지금 쓰는 설정")}\n   ${await describe(CONFIG)}\n`);
@@ -91,7 +139,15 @@ try {
 }
 
 await copyFile(CONFIG, BACKUP);
-await copyFile(source, CONFIG);
+const [current, incoming] = await Promise.all([readFile(CONFIG, "utf8"), readFile(source, "utf8")]);
+const { text, moved } = whole ? { text: incoming, moved: [] } : carryNameplate(current, incoming);
+await writeFile(CONFIG, text, "utf8");
+
 console.log(`\n${bold("바꿨습니다")} — ${await describe(CONFIG)}`);
+if (moved.length) {
+  console.log(`   ${dim("쓰시던 이름표는 그대로 옮겼습니다:")}`);
+  for (const line of moved) console.log(`   ${dim("  " + line)}`);
+  console.log(`   ${dim("예시의 이름표까지 쓰시려면: npm run use -- " + want + " --통째로")}`);
+}
 console.log(`   ${dim(`이전 것은 school.config.ts.bak 에 있습니다 (npm run use -- 되돌리기)`)}`);
 console.log(`   ${dim("화면이 켜져 있으면 저장과 동시에 바뀝니다")}\n`);
