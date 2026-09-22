@@ -9,6 +9,7 @@
   },
   "scripts": {
     "setup": "node scripts/setup.mjs",
+    "use": "node scripts/use.mjs",
     "check": "node scripts/check.mjs",
     "serial": "node scripts/serial.mjs",
     "dev": "vite",
