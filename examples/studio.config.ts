@@ -94,6 +94,10 @@ export const STAFF: StaffEntry[] = [
   { dept: "websearch", rank: "member", name: "오시연", role: "사례 수집",
     colors: ["#3c3a4f", "#ffe6ef", "#8f7fd1"],
     thoughts: ["자랑 글 말고 불평 글에서 막힌 지점이 보여요.", "남의 연수 후기를 먼저 읽습니다."] },
+  // 1차 추리기가 병목이라 붙인 사람. 선생님 앞에 쌓이는 양을 줄이는 게 일입니다
+  { dept: "websearch", rank: "member", name: "표누리", role: "올릴 것만 추리기",
+    colors: ["#4a3328", "#d8ead2", "#8f7fd1"],
+    thoughts: ["스무 개를 다 올리면 선생님이 스무 개를 다 봐야 해요.", "겹치는 건 하나로 묶고 뺀 이유를 적어둡니다.", "버린 것도 어디 있는지는 남겨둬요."] },
 
   { dept: "plan", rank: "lead", name: "류지완", role: "세부 기획 팀장", callsign: "류흐름",
     colors: ["#4a3328", "#ffe6ef", "#e2857f"],
@@ -121,7 +125,7 @@ export const STAFF: StaffEntry[] = [
 
   { dept: "story", rank: "lead", name: "양보미", role: "영상 스토리 팀장", callsign: "양스토리",
     colors: ["#3c3a4f", "#ffe6ef", "#7fb2a5"],
-    thoughts: ["기획안만 있으면 스토리는 같이 짜요. 혼자 안 정합니다.", "인물이 흔들리면 마스터 시트부터 다시 뽑아요.", "한 화에 하나만 남기고 나머지는 다음 화로."] },
+    thoughts: ["기획안 없이는 안 만듭니다. 뭘 위한 건지부터 물어요.", "스토리는 같이 짜요. 혼자 안 정합니다.", "한 화에 하나만 남기고 나머지는 다음 화로."] },
   { dept: "story", rank: "member", name: "박이현", role: "화별 쪼개기",
     colors: ["#372b4a", "#d8ead2", "#e2857f"],
     thoughts: ["연재는 끊는 자리가 절반이에요.", "다음 화가 궁금해야 이어서 봅니다."] },
@@ -139,7 +143,7 @@ export const STAFF: StaffEntry[] = [
 
   { dept: "review", rank: "lead", name: "문가율", role: "검수 팀장", callsign: "문검수",
     colors: ["#2f2a3d", "#d8ead2", "#e2857f"],
-    thoughts: ["뭘 검수할 문서인지부터 물어봐요. 잣대가 다릅니다.", "반려 사유는 한 줄, 고칠 자리는 꼭 같이 적어요.", "기계 검사에서 걸리면 제가 괜찮다고 해도 반려예요."] },
+    thoughts: ["어떻게 만들었는지는 안 봅니다. 처음 받은 사람으로 읽어요.", "반려 사유는 한 줄, 고칠 자리는 꼭 같이 적어요.", "기계 검사에서 걸리면 제가 괜찮다고 해도 반려예요."] },
   { dept: "review", rank: "member", name: "신유하", role: "표현·말투 검수",
     colors: ["#3c3a4f", "#f0e2c8", "#7fb2a5"],
     thoughts: ["금칙어 목록은 TEACHER_OFFICE.md 를 따릅니다.", "듣는 사람에게 명령하는 말투를 걸러냅니다."] },
@@ -189,7 +193,8 @@ export const DAY_PLAN: DayStep[] = [
   { title: "08:00 전원 출근", kind: "출근" },
   { title: "내 드라이브에서 찾기", team: "drive", secs: 5 },
   { title: "웹에서 보태기", team: "websearch", secs: 6 },
-  { title: "1차 추리기 — 선생님이 직접", secs: 2,
+  // 제일 오래 걸리고 제일 미루게 되는 자리. 화면에서도 그만큼 머뭅니다
+  { title: "1차 추리기 — 선생님이 직접", secs: 9,
     note: "모인 자료를 선생님이 먼저 훑는 자리입니다. 여기서 안 걸러진 게 뒤로 넘어갑니다." },
   { title: "AI와 세부 기획 조정", team: "plan", secs: 8 },
   { title: "흐름안 고르기", kind: "결재", team: "plan", attendees: ["plan", "review", "desk"] },

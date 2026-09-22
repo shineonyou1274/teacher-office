@@ -112,7 +112,7 @@ export const STAFF: StaffEntry[] = [
 
   { dept: "review", rank: "lead", name: "문가율", role: "교육과정 검수 팀장", callsign: "문검수",
     colors: ["#2f2a3d", "#d8ead2", "#e2857f"],
-    thoughts: ["기준에서 벗어나면 아무리 재밌어도 반려예요.", "반려 사유는 한 줄로 답니다.", "출처 없는 문장은 통과 못 시켜요."] },
+    thoughts: ["기준에서 벗어나면 아무리 재밌어도 반려예요.", "반려 사유는 한 줄로 답니다.", "어떻게 만들었는지는 안 봅니다. 처음 받은 사람으로 읽어요."] },
   { dept: "review", rank: "member", name: "배준서", role: "성취기준 대조",
     colors: ["#5a3b2e", "#ffe6ef", "#8f7fd1"],
     thoughts: ["성취기준 코드까지 맞춰야 진짜 대조예요.", "학년 범위 넘는 개념이 섞였는지 봅니다."] },
