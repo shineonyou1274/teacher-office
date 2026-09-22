@@ -25,6 +25,15 @@ const rl = createInterface({ input: stdin, output: stdout, terminal: stdin.isTTY
 const bold = (s) => `\u001b[1m${s}\u001b[0m`;
 const dim = (s) => `\u001b[2m${s}\u001b[0m`;
 
+// 한글 조사. "거창고등학교와 샤이니샘이" 처럼 앞 글자에 받침이 있는지로 갈립니다.
+// 학교 이름도 호칭도 사람마다 다르니 조사를 고정해 둘 수 없습니다.
+const hasBatchim = (word) => {
+  const c = (word.trim().slice(-1) || " ").charCodeAt(0);
+  return c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 !== 0;
+};
+const 와과 = (w) => (hasBatchim(w) ? "\uacfc" : "\uc640");
+const 이가 = (w) => (hasBatchim(w) ? "\uc774" : "\uac00");
+
 // 한 줄씩 받아쓰기. rl.question 을 그대로 쓰지 않는 이유는, 답을 파일로
 // 흘려넣어 시험할 때(입력이 터미널이 아닐 때) 중간에 끊기기 때문입니다.
 const pending = [];
@@ -223,22 +232,23 @@ await writeFile(join(ROOT, "MY_ANSWERS.md"), answers, "utf8");
 console.log(`
 ${bold("이름표까지 끝났습니다.")}
 
-  화면에 ${schoolName} 과 ${teacherName} 이 뜹니다. ${bold("npm run dev")} 로 확인해 보세요.
+  화면에 ${schoolName}${와과(schoolName)} ${teacherName}${이가(teacherName)} 뜹니다. ${bold("npm run dev")} 로 확인해 보세요.
 
 ${bold("남은 절반은 AI와 합니다.")}
 
   방금 적으신 답은 아직 정리되지 않은 말 그대로입니다. 그걸 순서로 묶고,
-  12개 팀을 선생님 일에 맞게 다시 짜고, 불만에서 금칙어를 뽑는 건
+  팀을 선생님 일에 맞게 다시 짜고, 불만에서 금칙어를 뽑는 건
   되물어보며 해야 하는 일이라 이 창에서는 못 합니다.
 
-  ChatGPT나 Claude 대화창에 아래 두 파일을 붙여넣고,
+  ChatGPT나 Claude 대화창에 아래 세 파일을 붙여넣고,
   ${bold("\u201cSETUP.md 대로 이어서 해줘\u201d")} 라고 하세요.
 
-    SETUP.md        AI에게 주는 순서
-    MY_ANSWERS.md   방금 적으신 답
+    SETUP.md          AI에게 주는 순서
+    MY_ANSWERS.md     방금 적으신 답
+    school.config.ts  팀과 하루 순서가 적힌 곳 — AI가 고쳐 줄 파일
 
   AI가 \u201c제가 이해한 순서는 이렇습니다 \u2014 맞나요?\u201d 하고 되물어봅니다.
-  고칠 것을 말해주시면 그때 12팀을 지어줍니다.
+  고칠 것을 말해주시면 그때 팀을 짜줍니다.
 
   되돌리려면 .bak 파일의 이름에서 .bak 만 지우면 됩니다.
 `);

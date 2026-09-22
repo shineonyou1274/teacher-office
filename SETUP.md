@@ -10,7 +10,7 @@
 ## 쓰는 법
 
 ChatGPT나 Claude 대화창에 **이 문서**와 **`MY_ANSWERS.md`** 를 붙여넣고,
-(12팀까지 다시 짜려면 **`school.config.ts`** 도 함께) 이렇게 말하세요.
+(팀까지 다시 짜려면 **`school.config.ts`** 도 함께) 이렇게 말하세요.
 
 ```
 SETUP.md 대로 이어서 해줘.
