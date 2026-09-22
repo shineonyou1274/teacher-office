@@ -124,7 +124,8 @@ const schoolName = await ask("학교 이름이 어떻게 되나요?", currentFie
 const teacherName = await ask("선생님 성함은? (화면 속 캐릭터 이름입니다)", currentField(configBefore, "name", "export const TEACHER"), "예) 김하늘");
 const callsign = await ask("AI 직원들이 선생님을 뭐라고 부르면 될까요?", currentField(configBefore, "callsign", "export const TEACHER"), "예) 선생님 · 부장님 · 샘");
 const subject = await ask("담당 과목이나 맡은 업무는요?", currentField(configBefore, "subject", "export const TEACHER"), "예) 영어 · 진로 · 3학년 부장");
-// 배지는 학교 이름 첫 글자로 자동. 물어볼 만한 가치가 없습니다
+// 배지(화면 왼쪽 위 동그라미 한 글자)는 학교 이름 첫 글자로 자동.
+// 물어보기엔 사소하지만, 정했으면 정했다고 밝혀야 합니다
 const badge = (schoolName.trim()[0] || "校");
 
 // ── 2. 하는 일 ───────────────────────────────────────────
@@ -197,7 +198,9 @@ ${asList(complaints)}
 `;
 
 console.log(bold("이렇게 합니다\n"));
-console.log(`  school.config.ts   학교 ${schoolName} · 배지 ${badge} · 이름 ${teacherName} · 호칭 ${callsign} · ${subject}`);
+console.log(`  school.config.ts   학교 ${schoolName} · 이름 ${teacherName} · 호칭 ${callsign} · ${subject}`);
+console.log(dim(`                     배지는 "${badge}" 로 해뒀습니다 — 화면 왼쪽 위 동그라미에 들어가는 글자입니다`));
+console.log(dim(`                     (학교 이름 첫 글자. 바꾸려면 school.config.ts 의 SCHOOL.badge)`));
 console.log(`  TEACHER_OFFICE.md  머리말에 위 이름표`);
 console.log(`  MY_ANSWERS.md      새 파일 — 2·3번 답을 그대로 적어둡니다`);
 console.log(dim(`                     (하는 일 ${repeated.length}줄 · 방식 ${howIWork.length}줄 · 불만 ${complaints.length}줄)`));
