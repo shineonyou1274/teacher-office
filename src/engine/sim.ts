@@ -62,7 +62,21 @@ const DAY_START_MIN = 8 * 60;    // 08:00 출근
 export const STEP_NAMES = DAY_PLAN.map((s) => s.title);
 export const STEP_COUNT = STEP_NAMES.length;
 
-/** 지시창에서 부서를 찾을 때 쓰는 키워드 (구체적인 것부터) */
+/**
+ * 지시창에서 부서를 찾을 때 쓰는 말.
+ *
+ * 화면에 적힌 팀 이름이 먼저입니다. 팀 이름을 "영상 스토리팀" 으로 바꾸셨으면
+ * "영상 스토리 어디까지 됐어" 로 부를 수 있어야 하니까요. 아래 표는 기본 팀을
+ * 그대로 두신 분을 위한 예비입니다.
+ */
+const nameWords = (): [string, string[]][] =>
+  DEPARTMENTS.map((d) => {
+    const label = d.name.replace(/(팀|실)$/, "").replace(/^(내|우리)\s*/, "").trim();
+    const words = [label, d.short].filter((w) => w && w.length >= 2);
+    return [d.id, words] as [string, string[]];
+  });
+
+/** 기본 부서 id를 그대로 쓰는 경우의 키워드 (구체적인 것부터) */
 const TEAM_WORDS: [string, string[]][] = [
   ["review", ["검수", "성취기준", "금칙어", "반려"]],
   ["learner", ["학습자", "수준", "진단", "반응"]],
@@ -77,6 +91,19 @@ const TEAM_WORDS: [string, string[]][] = [
   ["reflect", ["성찰", "리뷰", "피드백"]],
   ["desk", ["비서", "교무", "브리핑"]],
 ];
+
+/**
+ * 지시창에 적힌 말에서 부서를 찾습니다. 설정에서 지운 부서는 못 부르게 합니다 —
+ * 안 그러면 없는 팀을 찾다 깨집니다.
+ */
+export function findTeam(text: string): string | null {
+  const exists = (id: string) => DEPARTMENTS.some((d) => d.id === id);
+  for (const [id, words] of [...nameWords(), ...TEAM_WORDS]) {
+    if (exists(id) && words.some((w) => text.includes(w))) return id;
+  }
+  const staff = ROSTER.find((s) => text.includes(s.name) || (s.callsign && text.includes(s.callsign)));
+  return staff && exists(staff.deptId) ? staff.deptId : null;
+}
 
 const rand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -461,13 +488,7 @@ export class Office {
   }
 
   private teamFromText(text: string): string | null {
-    // 설정에서 지운 부서는 못 부르게 한다. 안 그러면 없는 팀을 찾다 깨진다
-    const exists = (id: string) => DEPARTMENTS.some((d) => d.id === id);
-    for (const [id, words] of TEAM_WORDS) {
-      if (exists(id) && words.some((w) => text.includes(w))) return id;
-    }
-    const staff = ROSTER.find((s) => text.includes(s.name) || (s.callsign && text.includes(s.callsign)));
-    return staff && exists(staff.deptId) ? staff.deptId : null;
+    return findTeam(text);
   }
 
   private sayProgress() {

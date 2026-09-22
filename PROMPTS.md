@@ -28,7 +28,7 @@ school.config.ts 파일만 고쳐줘. 다른 파일은 건드리지 마.
 부서 12개 이름을 우리 학교에서 쓰는 말로 바꿔줘.
 
 규칙:
-- 부서 id 는 절대 바꾸지 말고, name·icon·short·task·report 만 바꿔
+- 부서 id 는 그대로 두고, name·icon·short·task·report 만 바꿔
 - 부서는 12개 그대로 유지
 - 직원 이름은 한국 이름으로, 각자 성격이 드러나는 말버릇을 2~3개씩
 - colors 는 지금 쓰는 톤에서 벗어나지 않게

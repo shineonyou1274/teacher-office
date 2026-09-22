@@ -99,7 +99,11 @@ SETUP.md 대로 이어서 해줘.
 
 **② `school.config.ts` 의 `DEPARTMENTS`**
 
-- **id 는 절대 바꾸지 마세요.** `research, learner, design, review, write, slide, print, assess, care, comm, reflect, desk` 그대로. 화면이 이 id로 움직입니다.
+- **id 는 그냥 두는 게 편합니다.** `research, learner, design, review, write, slide, print, assess, care, comm, reflect, desk`
+  안 쓰는 팀은 지우고, 남는 팀의 `name` 만 바꾸면 화면은 선생님 말로 나옵니다.
+- 굳이 id 까지 바꾸신다면 **세 군데를 같이** 바꿔야 합니다 — `DEPARTMENTS` 의 `id`,
+  `STAFF` 의 `deptId`, `DAY_PLAN` 의 `team`. 하나라도 빠지면 화면 위에 어느 id가
+  어긋났는지 뜹니다. `examples/studio.config.ts` 가 id까지 바꾼 예입니다.
 - **개수는 3~12개 사이에서 자유입니다. 안 쓰는 팀은 지우세요.**
   억지로 12개를 채우면 한 번도 안 부르는 방이 생기고, 그게 '내 일 같지 않다'는
   느낌의 원인이 됩니다. 1단계에서 확인받은 순서에 나오는 일만 팀으로 만드세요.

@@ -2,7 +2,7 @@
  * 인사기록 — school.config.ts 를 읽어 직원 목록을 만듭니다.
  * 이 파일은 고칠 일이 없습니다. 이름·성격을 바꾸려면 school.config.ts 를 여세요.
  */
-import { DEPARTMENTS, PENDING, STAFF, TEACHER, type StaffEntry } from "../../school.config";
+import { DAY_PLAN, DEPARTMENTS, PENDING, STAFF, TEACHER, type StaffEntry } from "../../school.config";
 
 export type Profile = {
   id: string;
@@ -99,6 +99,12 @@ export function configWarnings(): string[] {
   }
   for (const id of Object.keys(PENDING_INPUT)) {
     if (!DEPARTMENTS.some((d) => d.id === id)) out.push(`PENDING: 모르는 부서 id "${id}" 입니다.`);
+  }
+  // 부서 id를 바꾸고 DAY_PLAN 을 안 고치면, 하루가 없는 팀을 부르며 그냥 지나갑니다
+  for (const step of DAY_PLAN) {
+    if (step.team && !DEPARTMENTS.some((d) => d.id === step.team)) {
+      out.push(`하루 순서 "${step.title}": 모르는 부서 id "${step.team}" 입니다. DEPARTMENTS 에 없는 팀이에요.`);
+    }
   }
   return out;
 }
