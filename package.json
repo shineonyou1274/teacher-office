@@ -12,6 +12,7 @@
     "use": "node scripts/use.mjs",
     "check": "node scripts/check.mjs",
     "record": "node scripts/record.mjs",
+    "orders": "node scripts/orders.mjs",
     "serial": "node scripts/serial.mjs",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

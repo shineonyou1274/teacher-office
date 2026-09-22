@@ -7,6 +7,7 @@
  * 단계를 바꾸고 싶으면 아래 DAY_PLAN 배열만 고치면 되고, 엔진은 안 건드려도 됩니다.
  */
 import { DAY_PLAN, DEPARTMENTS, type DayStep } from "../../school.config";
+import { sendOrder } from "./orders";
 import { findRoute } from "./pathfind";
 import { ROSTER, PENDING_INPUT, TEAM_INFO, LEADS, FRONT_DESK, ME, type Profile } from "./staff";
 import {
@@ -17,7 +18,7 @@ import {
 export type TeamState = "마침" | "작업 중" | "결재 대기" | "자료 대기" | "대기";
 export type Pose = "stand" | "walk" | "sit" | "type" | "talk";
 export type Heading = "up" | "down" | "left" | "right";
-export type MsgSource = "rule" | "note";
+export type MsgSource = "rule" | "note" | "지시";
 
 export type Person = {
   id: string;
@@ -104,6 +105,9 @@ export function findTeam(text: string): string | null {
   const staff = ROSTER.find((s) => text.includes(s.name) || (s.callsign && text.includes(s.callsign)));
   return staff && exists(staff.deptId) ? staff.deptId : null;
 }
+
+/** 일을 시키는 말인지. "검수팀 상황"은 묻는 것이고 "검수팀 이거 봐줘"는 시키는 것입니다 */
+const WORK_WORDS = /만들|짜줘|짜 ?줘|써줘|써 ?줘|봐줘|봐 ?줘|찾아|고쳐|검수해|올려|뽑아|정리해|해줘|해 ?줘|부탁/;
 
 const rand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -471,20 +475,44 @@ export class Office {
     if (!text) return;
     this.addMsg("me", ME.name, text);
 
-    const deptId = this.teamFromText(text);
-    if (deptId && !/전체|모두|다들/.test(text)) return this.sayTeam(deptId);
-
+    // ① 화면이 알고 있는 것 — 지금 상태를 묻는 말. 여기는 각본이 답해도 맞습니다
     if (/자리 지키|집중|딴짓/.test(text)) return this.setFocusMode(true);
     if (/풀어|쉬어|해제/.test(text)) return this.setFocusMode(false);
     if (/승인|결재|오케이|진행해/.test(text) && this.signoffPending) {
       this.signOff();
-      return this.addMsg("staff", FRONT_DESK.name, "결재 받았습니다. 집필팀에 바로 넘길게요.");
+      return this.addMsg("staff", FRONT_DESK.name, "결재 받았습니다. 다음 단계로 넘길게요.");
     }
+    // 팀을 짚어 물으면 그 팀 답을 먼저. "영상 스토리팀 상황" 은 전체 현황이 아닙니다
+    const deptId = this.teamFromText(text);
+    if (deptId && !/전체|모두|다들/.test(text) && !WORK_WORDS.test(text)) return this.sayTeam(deptId);
+
     if (/왜|늦|지연|막히|막힌|막힘|안 ?되|문제/.test(text)) return this.sayBlocked();
     if (/뭐|현황|상황|진행|보고|어디까지/.test(text)) return this.sayProgress();
 
-    this.addMsg("staff", FRONT_DESK.name,
-      "이렇게 물어보시면 제일 빨라요 — “어디까지 됐어?” / “막힌 데 있어?” / “검수팀 상황” / “자리 지키기”.");
+    // ② 화면이 못 하는 것 — 일을 시키는 말. 받아 적어 Claude Code 로 넘깁니다
+    this.passToClaude(text, deptId);
+  }
+
+  /** 시키신 일을 적어둡니다. 화면은 일을 못 합니다 — 적는 데까지가 화면 몫입니다 */
+  private passToClaude(text: string, deptId: string | null) {
+    const lead = deptId ? LEADS[deptId] : null;
+    const who = lead ?? FRONT_DESK;
+    void sendOrder(text, deptId).then((r) => {
+      if (r.ok) {
+        const team = lead ? `${lead.name}(${DEPARTMENTS.find((d) => d.id === deptId)?.name})` : "저희";
+        this.addMsg("staff", who.name,
+          `적어뒀습니다. ${team}가 맡습니다.\n` +
+          `실제로 하는 건 Claude Code 예요 — 거기서 ${"\u201c"}/지시받기${"\u201d"} 를 치시면 꺼내 갑니다.` +
+          (r.waiting > 1 ? `\n지금 대기 ${r.waiting}건입니다.` : ""),
+          "지시");
+      } else if (r.why === "여기서는안됨") {
+        this.addMsg("staff", who.name,
+          "여기서는 받아 적을 수가 없어요. 이 화면은 npm run dev 로 열었을 때만 지시를 받습니다.\n" +
+          "(올려둔 주소로 보고 계시면 구경만 됩니다)");
+      } else {
+        this.addMsg("staff", who.name, "받아 적다가 실패했어요. 한 번 더 말씀해 주시겠어요?");
+      }
+    });
   }
 
   private teamFromText(text: string): string | null {

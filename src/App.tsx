@@ -8,6 +8,8 @@ import { ago, loadLive, type Live } from "./engine/live";
 const SOURCE_LABEL: Record<NonNullable<Msg["source"]>, string> = {
   rule: "규칙",
   note: "안내",
+  // 각본이 아니라 실제로 적힌 지시. 이 표가 붙은 줄만 Claude Code 로 넘어갑니다
+  지시: "지시 접수",
 };
 
 const QUICK = [

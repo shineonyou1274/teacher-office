@@ -14,5 +14,8 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "school.config.ts", "vite.config.ts"]
+  // vite.config.ts 는 빼둡니다. 그 안은 브라우저가 아니라 node 에서 도는 코드라
+  // node 타입이 따로 필요한데, 그것 때문에 설치를 한 번 더 하시게 하고 싶지 않습니다.
+  // vite 가 실행할 때 알아서 읽습니다.
+  "include": ["src", "school.config.ts"]
 }

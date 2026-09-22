@@ -89,6 +89,8 @@ body { padding: 18px 16px 40px; }
   border-radius: 4px; font-family: "Courier New", monospace; }
 .src.rule { background: #f0ece4; color: #6d6458; }
 .src.note { background: #fdf0d5; color: #6b5a1f; }
+/* 실제로 적힌 지시 — 각본과 눈으로 구분되게 */
+.src.지시 { background: #d8ead2; color: #2f5233; }
 
 .quick { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 10px 8px; }
 .quick button { font-family: inherit; font-size: 11px; font-weight: 700; padding: 4px 9px; cursor: pointer;
